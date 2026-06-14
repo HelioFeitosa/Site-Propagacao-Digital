@@ -26,7 +26,10 @@
 ## Páginas criadas para SEO
 
 - `/criacao-de-sites-belem`
+- `/lojas-virtuais`
 - `/landing-pages`
 - `/seo-para-empresas`
 - `/trafego-pago`
 - `/automacao-com-ia`
+- `/agentes-de-atendimento`
+- `/videos-e-artes`
