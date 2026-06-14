@@ -664,12 +664,19 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   transition: all var(--t-base);
   display: flex;
   flex-direction: column;
+  color: inherit;
+  text-decoration: none;
 }
 
 .service-card:hover {
   transform: translateY(-6px);
   border-color: rgba(0, 255, 136, 0.4);
   box-shadow: 0 20px 40px -10px rgba(0, 255, 136, 0.2);
+}
+
+.service-card:focus-visible {
+  outline: 3px solid rgba(0, 255, 136, 0.75);
+  outline-offset: 4px;
 }
 
 .service-card.highlight {
