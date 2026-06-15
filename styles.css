@@ -1592,6 +1592,14 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   font-size: 0.95rem;
 }
 
+@media (min-width: 769px) {
+  .landing-pages-page .landing-panel strong,
+  .landing-pages-page .landing-panel p {
+    color: var(--color-accent);
+    text-shadow: 0 0 16px rgba(0, 255, 136, 0.28);
+  }
+}
+
 .landing-section {
   padding: 3.75rem 0;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
