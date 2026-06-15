@@ -1383,10 +1383,30 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 
 .landing-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
   color: var(--color-text);
   font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.landing-brand-mark {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.28));
+}
+
+.landing-home-link {
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(0, 255, 136, 0.28);
+  border-radius: 8px;
+  color: var(--color-accent) !important;
+  background: rgba(0, 255, 136, 0.06);
+  font-weight: 800 !important;
 }
 
 .landing-nav-links {
@@ -1403,6 +1423,11 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 .landing-nav-links a:hover {
   color: var(--color-accent);
+}
+
+.landing-home-link:hover {
+  border-color: rgba(0, 255, 136, 0.55);
+  background: rgba(0, 255, 136, 0.12);
 }
 
 .landing-hero {
@@ -1744,6 +1769,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
   .landing-nav-links a:not(.nav-cta) {
     display: none;
+  }
+
+  .landing-nav-links .landing-home-link {
+    display: inline-flex;
   }
 
   .landing-hero-grid,
