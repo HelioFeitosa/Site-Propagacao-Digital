@@ -1282,11 +1282,22 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   font-weight: 600;
   font-size: 0.9rem;
   box-shadow: 0 8px 25px rgba(37, 211, 102, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(14px);
   transition: all var(--t-base);
+}
+
+.whatsapp-float.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
   animation: bounce-float 3s ease-in-out infinite;
 }
 
-.whatsapp-float:hover {
+.whatsapp-float.is-visible:hover {
   transform: scale(1.05);
   box-shadow: 0 12px 35px rgba(37, 211, 102, 0.6);
 }

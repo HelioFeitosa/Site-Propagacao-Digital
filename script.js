@@ -169,6 +169,41 @@
     });
   }
 
+  /* === Centralizar card de servico no mobile === */
+  function setupMobileServiceHashCentering() {
+    const mq = window.matchMedia('(max-width: 768px)');
+
+    const centerServiceCard = () => {
+      if (!mq.matches || !window.location.hash.startsWith('#servico-')) return;
+      const card = document.querySelector(window.location.hash);
+      if (!card) return;
+      card.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+    };
+
+    window.addEventListener('hashchange', () => {
+      window.setTimeout(centerServiceCard, 80);
+    });
+    window.setTimeout(centerServiceCard, 120);
+    window.setTimeout(centerServiceCard, 650);
+  }
+
+  /* === WhatsApp flutuante somente no fim da pagina === */
+  function setupFloatingWhatsapp() {
+    const button = document.querySelector('.whatsapp-float');
+    if (!button) return;
+
+    const updateButton = () => {
+      const scrollBottom = window.scrollY + window.innerHeight;
+      const pageHeight = document.documentElement.scrollHeight;
+      const nearBottom = pageHeight - scrollBottom <= 260;
+      button.classList.toggle('is-visible', nearBottom);
+    };
+
+    window.addEventListener('scroll', updateButton, { passive: true });
+    window.addEventListener('resize', updateButton);
+    updateButton();
+  }
+
   /* === Lang switch button === */
   function setupLangSwitch() {
     const btn = document.getElementById('langSwitch');
@@ -185,6 +220,8 @@
     setupHeaderScroll();
     setupReveal();
     setupSmoothScroll();
+    setupMobileServiceHashCentering();
+    setupFloatingWhatsapp();
     setupLangSwitch();
   });
 })();
