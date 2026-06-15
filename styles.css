@@ -1593,13 +1593,20 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 
 @media (min-width: 769px) {
+  .landing-pages-page .landing-panel {
+    background: rgba(4, 10, 8, 0.88);
+    border-color: rgba(0, 255, 136, 0.28);
+  }
+
   .landing-pages-page .landing-panel strong {
-    color: #073b25;
+    color: var(--color-accent);
+    text-shadow: 0 0 12px rgba(0, 255, 136, 0.24);
   }
 
   .landing-pages-page .landing-panel p {
-    color: #0f4d32;
+    color: var(--color-accent);
     font-weight: 600;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.18);
   }
 }
 
