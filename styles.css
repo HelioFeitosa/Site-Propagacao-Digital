@@ -1509,6 +1509,29 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   align-items: center;
 }
 
+.landing-hero-stacked .landing-hero-grid {
+  grid-template-columns: minmax(0, 860px);
+  justify-content: center;
+  text-align: left;
+}
+
+.landing-hero-card-image {
+  width: min(100%, 760px);
+  margin-bottom: 2rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 255, 136, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.42);
+}
+
+.landing-hero-card-image img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 8;
+  object-fit: cover;
+}
+
 .landing-hero h1 {
   max-width: 760px;
   margin: 0 0 1.1rem;
