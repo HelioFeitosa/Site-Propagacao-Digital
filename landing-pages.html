@@ -21,17 +21,18 @@
     <section class="landing-section"><div class="container landing-split"><div><h2>Para campanhas que não podem desperdiçar clique</h2><p>Quando você paga por tráfego, cada visita precisa cair em uma página clara, rápida e coerente com a promessa do anúncio.</p></div><ul class="landing-list"><li>Campanhas de Google Ads e Meta Ads.</li><li>Divulgação de serviços locais e atendimento por WhatsApp.</li><li>Lançamentos, ofertas, listas de espera e captação de leads.</li><li>Teste de uma nova oferta antes de criar um site completo.</li></ul></div></section>
     <section class="landing-section" id="processo"><div class="container"><h2>Do clique ao contato</h2><div class="landing-steps"><article class="landing-step"><span>1</span><h3>Oferta</h3><p>Definimos promessa, público, dor e chamada principal.</p></article><article class="landing-step"><span>2</span><h3>Copy</h3><p>Escrevemos a página com foco em decisão e contato.</p></article><article class="landing-step"><span>3</span><h3>Design</h3><p>Criamos uma experiência visual rápida, direta e responsiva.</p></article><article class="landing-step"><span>4</span><h3>Medição</h3><p>Deixamos a base pronta para Analytics, eventos e campanhas.</p></article></div></div></section>
     <section class="landing-section" id="faq"><div class="container"><h2>Perguntas frequentes</h2><div class="landing-faq"><details open><summary>Landing page substitui site?</summary><p>Às vezes sim, mas normalmente ela é melhor para campanhas específicas. O site institucional constrói presença mais ampla.</p></details><details><summary>Posso usar só WhatsApp?</summary><p>Sim. A página pode ter o WhatsApp como principal canal de conversão.</p></details><details><summary>Dá para anunciar depois?</summary><p>Sim. A estrutura já nasce preparada para receber tráfego pago.</p></details></div></div></section>
-    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Tem uma oferta? Vamos transformar em página de venda.</h2><p>Envie o serviço, preço ou objetivo da campanha e montamos a melhor estrutura.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20criar%20uma%20landing%20page">Criar minha landing</a><a class="btn-secondary" href="/">Voltar para a home</a></div></div></div></section>
+    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Tem uma oferta? Vamos transformar em página de venda.</h2><p>Envie o serviço, preço ou objetivo da campanha e montamos a melhor estrutura.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20criar%20uma%20landing%20page">Criar minha landing</a><a class="btn-secondary" href="/#servicos" data-mobile-href="/#servico-landing-pages">Voltar para a home</a></div></div></div></section>
   </main>
 <script class="landing-home-script">
 (function(){
-  var link = document.querySelector('.landing-home-link[data-mobile-href]');
-  if (!link) return;
-  link.addEventListener('click', function(event){
-    if (window.matchMedia('(max-width: 768px)').matches) {
-      event.preventDefault();
-      window.location.href = link.getAttribute('data-mobile-href');
-    }
+  var links = document.querySelectorAll('[data-mobile-href]');
+  links.forEach(function(link){
+    link.addEventListener('click', function(event){
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        event.preventDefault();
+        window.location.href = link.getAttribute('data-mobile-href');
+      }
+    });
   });
 })();
 </script>

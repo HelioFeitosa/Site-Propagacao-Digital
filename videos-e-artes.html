@@ -21,17 +21,18 @@
     <section class="landing-section"><div class="container landing-split"><div><h2>Onde usar</h2><p>As peças podem apoiar presença orgânica, anúncios, páginas de venda e comunicação com clientes.</p></div><ul class="landing-list"><li>Instagram, Facebook, TikTok e YouTube Shorts.</li><li>Anúncios de tráfego pago.</li><li>Materiais para WhatsApp e status.</li><li>Banners para site, landing page e campanhas.</li></ul></div></section>
     <section class="landing-section" id="processo"><div class="container"><h2>Fluxo de criação</h2><div class="landing-steps"><article class="landing-step"><span>1</span><h3>Objetivo</h3><p>Definimos se a peça vai vender, informar, atrair ou fortalecer marca.</p></article><article class="landing-step"><span>2</span><h3>Mensagem</h3><p>Organizamos chamada, texto e hierarquia visual.</p></article><article class="landing-step"><span>3</span><h3>Design</h3><p>Criamos a peça com identidade e formato correto.</p></article><article class="landing-step"><span>4</span><h3>Entrega</h3><p>Exportamos os arquivos prontos para publicação.</p></article></div></div></section>
     <section class="landing-section" id="faq"><div class="container"><h2>Dúvidas sobre artes e vídeos</h2><div class="landing-faq"><details open><summary>Vocês criam pacote mensal?</summary><p>Sim. Podemos criar por campanha, pacote mensal ou demanda pontual.</p></details><details><summary>Preciso mandar fotos?</summary><p>Fotos reais ajudam muito, mas também podemos trabalhar com imagens do site, banco visual e direção criativa.</p></details><details><summary>As peças servem para anúncio?</summary><p>Sim. Podemos adaptar criativos para tráfego pago, respeitando objetivo e formato.</p></details></div></div></section>
-    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos criar peças que deixam sua oferta mais clara.</h2><p>Me diga o serviço, campanha ou produto que você quer divulgar.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20criar%20v%C3%ADdeos%20e%20artes%20para%20minha%20empresa">Criar vídeos e artes</a><a class="btn-secondary" href="/">Voltar para a home</a></div></div></div></section>
+    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos criar peças que deixam sua oferta mais clara.</h2><p>Me diga o serviço, campanha ou produto que você quer divulgar.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20criar%20v%C3%ADdeos%20e%20artes%20para%20minha%20empresa">Criar vídeos e artes</a><a class="btn-secondary" href="/#servicos" data-mobile-href="/#servico-videos-e-artes">Voltar para a home</a></div></div></div></section>
   </main>
 <script class="landing-home-script">
 (function(){
-  var link = document.querySelector('.landing-home-link[data-mobile-href]');
-  if (!link) return;
-  link.addEventListener('click', function(event){
-    if (window.matchMedia('(max-width: 768px)').matches) {
-      event.preventDefault();
-      window.location.href = link.getAttribute('data-mobile-href');
-    }
+  var links = document.querySelectorAll('[data-mobile-href]');
+  links.forEach(function(link){
+    link.addEventListener('click', function(event){
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        event.preventDefault();
+        window.location.href = link.getAttribute('data-mobile-href');
+      }
+    });
   });
 })();
 </script>

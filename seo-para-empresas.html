@@ -21,17 +21,18 @@
     <section class="landing-section"><div class="container landing-split"><div><h2>Buscas que viram oportunidade</h2><p>O objetivo é aparecer para quem já demonstra intenção comercial, não apenas gerar visualizações vazias.</p></div><ul class="landing-list"><li>Criação de sites em Belém.</li><li>Web designer em Belém.</li><li>Agência de marketing digital para pequenas empresas.</li><li>Landing page para WhatsApp.</li><li>Automação com IA para atendimento.</li></ul></div></section>
     <section class="landing-section" id="processo"><div class="container"><h2>Plano de trabalho</h2><div class="landing-steps"><article class="landing-step"><span>1</span><h3>Diagnóstico</h3><p>Mapeamos site, concorrência, termos e presença atual.</p></article><article class="landing-step"><span>2</span><h3>Correção</h3><p>Ajustamos estrutura, indexação e sinais técnicos.</p></article><article class="landing-step"><span>3</span><h3>Conteúdo</h3><p>Criamos páginas e textos voltados para intenção de busca.</p></article><article class="landing-step"><span>4</span><h3>Monitoramento</h3><p>Acompanhamos Search Console, acessos e oportunidades.</p></article></div></div></section>
     <section class="landing-section" id="faq"><div class="container"><h2>Dúvidas de SEO</h2><div class="landing-faq"><details open><summary>SEO coloca no primeiro lugar?</summary><p>Ninguém sério garante primeiro lugar. O trabalho aumenta chance de ranquear e gerar contatos com consistência.</p></details><details><summary>Quanto tempo leva?</summary><p>SEO costuma levar semanas ou meses, dependendo da concorrência e da autoridade do site.</p></details><details><summary>Precisa de blog?</summary><p>Nem sempre no começo. Primeiro vêm páginas de serviço, perfil local e base técnica.</p></details></div></div></section>
-    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos preparar sua empresa para ser encontrada.</h2><p>Chame no WhatsApp e eu avalio os primeiros termos que fazem sentido para o seu negócio.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20melhorar%20meu%20SEO">Falar sobre SEO</a><a class="btn-secondary" href="/">Voltar para a home</a></div></div></div></section>
+    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos preparar sua empresa para ser encontrada.</h2><p>Chame no WhatsApp e eu avalio os primeiros termos que fazem sentido para o seu negócio.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20melhorar%20meu%20SEO">Falar sobre SEO</a><a class="btn-secondary" href="/#servicos" data-mobile-href="/#servico-seo">Voltar para a home</a></div></div></div></section>
   </main>
 <script class="landing-home-script">
 (function(){
-  var link = document.querySelector('.landing-home-link[data-mobile-href]');
-  if (!link) return;
-  link.addEventListener('click', function(event){
-    if (window.matchMedia('(max-width: 768px)').matches) {
-      event.preventDefault();
-      window.location.href = link.getAttribute('data-mobile-href');
-    }
+  var links = document.querySelectorAll('[data-mobile-href]');
+  links.forEach(function(link){
+    link.addEventListener('click', function(event){
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        event.preventDefault();
+        window.location.href = link.getAttribute('data-mobile-href');
+      }
+    });
   });
 })();
 </script>

@@ -21,17 +21,18 @@
     <section class="landing-section"><div class="container landing-split"><div><h2>Indicado para</h2><p>Empresas locais, prestadores de serviço, consultórios, lojas, autônomos e negócios que dependem de confiança para vender.</p></div><ul class="landing-list"><li>Quem quer aparecer em buscas como web designer em Belém e criação de sites em Belém.</li><li>Quem precisa sair da dependência exclusiva do Instagram.</li><li>Quem quer apresentar serviços, provas, contatos e diferenciais em um lugar próprio.</li><li>Quem vai rodar tráfego pago e precisa de uma página confiável para receber cliques.</li></ul></div></section>
     <section class="landing-section" id="processo"><div class="container"><h2>Como funciona</h2><p>Processo simples, com escopo definido antes de começar.</p><div class="landing-steps"><article class="landing-step"><span>1</span><h3>Diagnóstico</h3><p>Entendemos público, serviço, cidade, oferta e objetivo comercial.</p></article><article class="landing-step"><span>2</span><h3>Estrutura</h3><p>Montamos seções, textos, imagens e chamadas de conversão.</p></article><article class="landing-step"><span>3</span><h3>Construção</h3><p>Desenvolvemos o site com performance, responsividade e SEO técnico.</p></article><article class="landing-step"><span>4</span><h3>Publicação</h3><p>Publicamos, testamos e deixamos pronto para Google Search Console.</p></article></div></div></section>
     <section class="landing-section" id="faq"><div class="container"><h2>Dúvidas comuns</h2><div class="landing-faq"><details open><summary>O site aparece no Google automaticamente?</summary><p>Ele fica preparado tecnicamente, mas o Google precisa rastrear e indexar. Também recomendamos Search Console e Perfil da Empresa no Google.</p></details><details><summary>Quanto tempo leva?</summary><p>Sites institucionais normalmente levam de 7 a 15 dias, dependendo do conteúdo e do escopo.</p></details><details><summary>Vocês escrevem os textos?</summary><p>Sim. Organizamos a mensagem comercial com base nos serviços, cidade, público e diferenciais da empresa.</p></details></div></div></section>
-    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos colocar sua empresa em uma página que vende.</h2><p>Chame no WhatsApp e diga qual serviço você oferece. Eu avalio a melhor estrutura para o seu site.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20criar%20um%20site%20profissional">Começar pelo WhatsApp</a><a class="btn-secondary" href="/">Voltar para a home</a></div></div></div></section>
+    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos colocar sua empresa em uma página que vende.</h2><p>Chame no WhatsApp e diga qual serviço você oferece. Eu avalio a melhor estrutura para o seu site.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20criar%20um%20site%20profissional">Começar pelo WhatsApp</a><a class="btn-secondary" href="/#servicos" data-mobile-href="/#servico-criacao-de-sites">Voltar para a home</a></div></div></div></section>
   </main>
 <script class="landing-home-script">
 (function(){
-  var link = document.querySelector('.landing-home-link[data-mobile-href]');
-  if (!link) return;
-  link.addEventListener('click', function(event){
-    if (window.matchMedia('(max-width: 768px)').matches) {
-      event.preventDefault();
-      window.location.href = link.getAttribute('data-mobile-href');
-    }
+  var links = document.querySelectorAll('[data-mobile-href]');
+  links.forEach(function(link){
+    link.addEventListener('click', function(event){
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        event.preventDefault();
+        window.location.href = link.getAttribute('data-mobile-href');
+      }
+    });
   });
 })();
 </script>

@@ -21,17 +21,18 @@
     <section class="landing-section"><div class="container landing-split"><div><h2>Quando vale a pena</h2><p>O agente é útil quando sua empresa recebe perguntas repetidas, perde contatos fora do horário ou demora para filtrar pedidos.</p></div><ul class="landing-list"><li>Empresas com atendimento por WhatsApp.</li><li>Serviços que precisam de orçamento antes da venda.</li><li>Negócios com alto volume de perguntas iguais.</li><li>Equipes pequenas que precisam ganhar tempo.</li></ul></div></section>
     <section class="landing-section" id="processo"><div class="container"><h2>Construção do agente</h2><div class="landing-steps"><article class="landing-step"><span>1</span><h3>Perguntas</h3><p>Mapeamos o que o cliente pergunta e o que a empresa precisa saber.</p></article><article class="landing-step"><span>2</span><h3>Fluxo</h3><p>Organizamos caminhos por tipo de necessidade.</p></article><article class="landing-step"><span>3</span><h3>Tom de voz</h3><p>Ajustamos linguagem para parecer com sua marca.</p></article><article class="landing-step"><span>4</span><h3>Teste real</h3><p>Simulamos conversas e corrigimos pontos de confusão.</p></article></div></div></section>
     <section class="landing-section" id="faq"><div class="container"><h2>Dúvidas sobre agentes</h2><div class="landing-faq"><details open><summary>Funciona para qualquer empresa?</summary><p>Funciona melhor quando há perguntas repetitivas e um processo claro de atendimento.</p></details><details><summary>O cliente percebe que é automático?</summary><p>Podemos deixar transparente e humano, sem fingir ser uma pessoa quando não é.</p></details><details><summary>Posso mudar o fluxo depois?</summary><p>Sim. O agente deve evoluir conforme chegam conversas reais.</p></details></div></div></section>
-    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos organizar seu atendimento com um agente inteligente.</h2><p>Conte quais perguntas seus clientes mais fazem e montamos o primeiro fluxo.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20criar%20um%20agente%20de%20atendimento">Criar agente</a><a class="btn-secondary" href="/">Voltar para a home</a></div></div></div></section>
+    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos organizar seu atendimento com um agente inteligente.</h2><p>Conte quais perguntas seus clientes mais fazem e montamos o primeiro fluxo.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20criar%20um%20agente%20de%20atendimento">Criar agente</a><a class="btn-secondary" href="/#servicos" data-mobile-href="/#servico-agentes-de-atendimento">Voltar para a home</a></div></div></div></section>
   </main>
 <script class="landing-home-script">
 (function(){
-  var link = document.querySelector('.landing-home-link[data-mobile-href]');
-  if (!link) return;
-  link.addEventListener('click', function(event){
-    if (window.matchMedia('(max-width: 768px)').matches) {
-      event.preventDefault();
-      window.location.href = link.getAttribute('data-mobile-href');
-    }
+  var links = document.querySelectorAll('[data-mobile-href]');
+  links.forEach(function(link){
+    link.addEventListener('click', function(event){
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        event.preventDefault();
+        window.location.href = link.getAttribute('data-mobile-href');
+      }
+    });
   });
 })();
 </script>

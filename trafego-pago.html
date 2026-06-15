@@ -21,17 +21,18 @@
     <section class="landing-section"><div class="container landing-split"><div><h2>Campanhas indicadas</h2><p>Tráfego pago funciona melhor quando existe uma oferta específica e uma página feita para converter.</p></div><ul class="landing-list"><li>Campanhas para serviços locais.</li><li>Captação de orçamento pelo WhatsApp.</li><li>Divulgação de landing pages e promoções.</li><li>Teste de mercado para novos serviços.</li></ul></div></section>
     <section class="landing-section" id="processo"><div class="container"><h2>Como colocamos no ar</h2><div class="landing-steps"><article class="landing-step"><span>1</span><h3>Estratégia</h3><p>Definimos oferta, público, verba e destino dos cliques.</p></article><article class="landing-step"><span>2</span><h3>Criativos</h3><p>Preparamos textos e peças alinhadas à promessa.</p></article><article class="landing-step"><span>3</span><h3>Publicação</h3><p>Configuramos campanha e destino sem atalhos arriscados.</p></article><article class="landing-step"><span>4</span><h3>Ajustes</h3><p>Analisamos sinais e melhoramos a campanha continuamente.</p></article></div></div></section>
     <section class="landing-section" id="faq"><div class="container"><h2>Dúvidas sobre tráfego</h2><div class="landing-faq"><details open><summary>Preciso ter site?</summary><p>É altamente recomendado. Anúncio sem página de destino confiável costuma converter menos.</p></details><details><summary>Qual verba mínima?</summary><p>Depende do mercado e objetivo. Começamos com uma verba viável para testar e aprender.</p></details><details><summary>Vocês prometem vendas?</summary><p>Não prometemos resultado garantido. Estruturamos campanha, página e otimização para aumentar a chance de retorno.</p></details></div></div></section>
-    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos montar uma campanha com base de venda.</h2><p>Antes de gastar com anúncio, vamos definir a oferta e a página certa.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20planejar%20uma%20campanha%20de%20tr%C3%A1fego%20pago">Planejar tráfego</a><a class="btn-secondary" href="/">Voltar para a home</a></div></div></div></section>
+    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos montar uma campanha com base de venda.</h2><p>Antes de gastar com anúncio, vamos definir a oferta e a página certa.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20planejar%20uma%20campanha%20de%20tr%C3%A1fego%20pago">Planejar tráfego</a><a class="btn-secondary" href="/#servicos" data-mobile-href="/#servico-trafego-pago">Voltar para a home</a></div></div></div></section>
   </main>
 <script class="landing-home-script">
 (function(){
-  var link = document.querySelector('.landing-home-link[data-mobile-href]');
-  if (!link) return;
-  link.addEventListener('click', function(event){
-    if (window.matchMedia('(max-width: 768px)').matches) {
-      event.preventDefault();
-      window.location.href = link.getAttribute('data-mobile-href');
-    }
+  var links = document.querySelectorAll('[data-mobile-href]');
+  links.forEach(function(link){
+    link.addEventListener('click', function(event){
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        event.preventDefault();
+        window.location.href = link.getAttribute('data-mobile-href');
+      }
+    });
   });
 })();
 </script>

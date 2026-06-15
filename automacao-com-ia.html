@@ -21,17 +21,18 @@
     <section class="landing-section"><div class="container landing-split"><div><h2>Para empresas que atendem pelo WhatsApp</h2><p>Se o seu atendimento depende de responder rápido e organizar pedidos, a IA pode reduzir atraso e padronizar a primeira conversa.</p></div><ul class="landing-list"><li>Serviços com perguntas repetitivas.</li><li>Empresas que recebem contatos fora do horário.</li><li>Negócios que precisam qualificar leads antes do orçamento.</li><li>Atendimentos que dependem de etapas ou triagem.</li></ul></div></section>
     <section class="landing-section" id="processo"><div class="container"><h2>Implementação segura</h2><div class="landing-steps"><article class="landing-step"><span>1</span><h3>Mapeamento</h3><p>Entendemos o atendimento atual e os gargalos.</p></article><article class="landing-step"><span>2</span><h3>Roteiro</h3><p>Criamos perguntas, respostas e caminhos do fluxo.</p></article><article class="landing-step"><span>3</span><h3>Teste</h3><p>Validamos respostas e limites antes de usar com clientes.</p></article><article class="landing-step"><span>4</span><h3>Ajuste</h3><p>Melhoramos o fluxo com base nas conversas reais.</p></article></div></div></section>
     <section class="landing-section" id="faq"><div class="container"><h2>Dúvidas sobre IA</h2><div class="landing-faq"><details open><summary>A IA substitui uma pessoa?</summary><p>Não necessariamente. O melhor uso é apoiar o atendimento, filtrar demandas e acelerar respostas iniciais.</p></details><details><summary>Dá para usar no WhatsApp?</summary><p>Sim, dependendo da ferramenta e do nível de integração desejado.</p></details><details><summary>É seguro para clientes?</summary><p>O fluxo deve ser testado, limitado e transparente para evitar respostas indevidas.</p></details></div></div></section>
-    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos automatizar o que hoje trava seu atendimento.</h2><p>Conte como chegam os contatos e quais perguntas mais se repetem.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20automatizar%20meu%20atendimento%20com%20IA">Começar automação</a><a class="btn-secondary" href="/">Voltar para a home</a></div></div></div></section>
+    <section class="landing-cta"><div class="container"><div class="landing-cta-box"><h2>Vamos automatizar o que hoje trava seu atendimento.</h2><p>Conte como chegam os contatos e quais perguntas mais se repetem.</p><div class="landing-actions"><a class="btn-primary" href="https://wa.me/5591987137397?text=Quero%20automatizar%20meu%20atendimento%20com%20IA">Começar automação</a><a class="btn-secondary" href="/#servicos" data-mobile-href="/#servico-automacao-com-ia">Voltar para a home</a></div></div></div></section>
   </main>
 <script class="landing-home-script">
 (function(){
-  var link = document.querySelector('.landing-home-link[data-mobile-href]');
-  if (!link) return;
-  link.addEventListener('click', function(event){
-    if (window.matchMedia('(max-width: 768px)').matches) {
-      event.preventDefault();
-      window.location.href = link.getAttribute('data-mobile-href');
-    }
+  var links = document.querySelectorAll('[data-mobile-href]');
+  links.forEach(function(link){
+    link.addEventListener('click', function(event){
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        event.preventDefault();
+        window.location.href = link.getAttribute('data-mobile-href');
+      }
+    });
   });
 })();
 </script>
