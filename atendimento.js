@@ -101,8 +101,8 @@
           <div class="pd-assistant-identity">
             <span class="pd-assistant-logo">PD</span>
             <span>
-              <strong>Lia</strong>
-              <small><i></i> Consultora digital online</small>
+              <strong>Hélio</strong>
+              <small><i></i> Consultor da Propagação Digital</small>
             </span>
           </div>
           <div class="pd-assistant-header-actions">
@@ -207,8 +207,16 @@
   function renderGreeting() {
     setProgress(8);
     input.placeholder = 'Digite seu primeiro nome...';
-    addMessage('Olá! Eu sou a Lia, consultora digital da Propagação Digital.', 'bot');
-    addTyping(() => addMessage('Vou entender seu negócio e indicar a solução com maior potencial de resultado. Como posso chamar você?', 'bot'));
+    addMessage('Olá! Eu sou o Hélio, consultor da Propagação Digital.', 'bot');
+    addTyping(() => addMessage(
+      'Me diga o seu nome e,<br>' +
+      'me fale um pouco do seu negócio ou do seu objetivo<br>' +
+      'para que eu possa te entender bem e<br>' +
+      'indicar a melhor solução pra você!<br>' +
+      'Vamos lá! 😄',
+      'bot',
+      true
+    ));
   }
 
   function renderStep() {
@@ -227,7 +235,12 @@
       business() {
         setProgress(24);
         input.placeholder = 'Ex.: clínica, loja, prestador de serviço...';
-        addTyping(() => addMessage(`Prazer, ${state.name}. Qual é o tipo do seu negócio ou serviço?`, 'bot'));
+        addTyping(() => addMessage(
+          `Prazer, ${escapeHtml(state.name)}!<br>` +
+          'Agora me fale um pouco do seu negócio ou do seu objetivo.',
+          'bot',
+          true
+        ));
       },
       goal() {
         setProgress(40);
