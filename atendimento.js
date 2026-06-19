@@ -88,10 +88,8 @@
     root.className = 'pd-assistant-root';
     root.innerHTML = `
       <button class="pd-assistant-launcher" type="button" aria-label="Abrir atendimento inteligente" aria-expanded="false">
-        <span class="pd-assistant-launcher-mark">PD</span>
         <span class="pd-assistant-launcher-copy">
-          <strong>Atendimento</strong>
-          <small>Descubra a solução ideal</small>
+          <strong>Atendente Online: Hélio</strong>
         </span>
         <span class="pd-assistant-launcher-status" aria-hidden="true"></span>
       </button>
