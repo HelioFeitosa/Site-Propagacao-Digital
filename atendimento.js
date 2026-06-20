@@ -2,43 +2,44 @@
   'use strict';
 
   const WHATSAPP_NUMBER = '5591987137397';
-  const STORAGE_KEY = 'pd-assistente-lead-v1';
+  const STORAGE_KEY = 'pd-assistente-helio-v2';
+  const API_ENDPOINT = '/api/atendimento';
 
   const services = {
     sites: {
       name: 'Criação de Sites Profissionais',
       path: '/criacao-de-sites-belem',
-      pitch: 'um site profissional, preparado para Google, confiança e contatos pelo WhatsApp'
+      pitch: 'site profissional, preparado para Google, confiança e contatos pelo WhatsApp'
     },
     lojas: {
-      name: 'Loja Virtual',
+      name: 'Lojas Virtuais',
       path: '/lojas-virtuais',
-      pitch: 'uma loja virtual organizada para apresentar produtos e facilitar pedidos ou pagamentos'
+      pitch: 'loja virtual com catálogo, pedidos, pagamento, frete e organização comercial'
     },
     trafego: {
-      name: 'Tráfego Pago Estratégico',
+      name: 'Tráfego Pago',
       path: '/trafego-pago',
-      pitch: 'campanhas com oferta, página de destino e acompanhamento comercial'
+      pitch: 'campanhas no Meta Ads e Google Ads com estratégia, página e acompanhamento'
     },
     seo: {
       name: 'SEO para Empresas',
       path: '/seo-para-empresas',
-      pitch: 'uma estrutura para sua empresa ser encontrada por clientes no Google'
+      pitch: 'estrutura para sua empresa aparecer quando o cliente procurar no Google'
     },
     automacao: {
       name: 'Automação com IA',
       path: '/automacao-com-ia',
-      pitch: 'automação de tarefas e atendimento para ganhar velocidade e reduzir trabalho repetitivo'
+      pitch: 'automações para reduzir tarefas repetitivas e acelerar processos'
     },
     agentes: {
       name: 'Agente de Atendimento',
       path: '/agentes-de-atendimento',
-      pitch: 'um agente inteligente para responder, qualificar e encaminhar clientes'
+      pitch: 'atendente inteligente para responder, qualificar e encaminhar clientes'
     },
     landing: {
-      name: 'Landing Page',
+      name: 'Landing Pages',
       path: '/landing-pages',
-      pitch: 'uma página de venda direta para transformar campanhas e visitas em conversas'
+      pitch: 'página direta para transformar anúncios, visitas e ofertas em conversas'
     },
     conteudo: {
       name: 'Vídeos e Artes',
@@ -47,32 +48,37 @@
     }
   };
 
-  const initialState = {
-    step: 'name',
+  const initialLead = {
     name: '',
     business: '',
     goal: '',
-    presence: '',
+    service: '',
     urgency: '',
-    investment: '',
-    recommendation: '',
-    score: 0,
-    completed: false
+    budget: '',
+    ready: false
   };
 
-  let state = loadState();
-
-  function loadState() {
+  function loadConversation() {
     try {
-      return { ...initialState, ...JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}') };
+      const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
+      return {
+        lead: { ...initialLead, ...(saved.lead || {}) },
+        messages: Array.isArray(saved.messages) ? saved.messages : []
+      };
     } catch {
-      return { ...initialState };
+      return { lead: { ...initialLead }, messages: [] };
     }
   }
 
-  function saveState() {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  function saveConversation() {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+      lead,
+      messages: chatMessages.slice(-24)
+    }));
   }
+
+  let { lead, messages: chatMessages } = loadConversation();
+  let isSending = false;
 
   function escapeHtml(value) {
     return String(value)
@@ -81,6 +87,10 @@
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;')
       .replaceAll("'", '&#039;');
+  }
+
+  function nl2br(value) {
+    return escapeHtml(value).replace(/\n/g, '<br>');
   }
 
   function injectInterface() {
@@ -111,17 +121,16 @@
 
         <div class="pd-assistant-progress" aria-hidden="true"><span></span></div>
         <div class="pd-assistant-messages" aria-live="polite"></div>
-
         <div class="pd-assistant-options"></div>
 
         <form class="pd-assistant-form">
-          <label class="sr-only" for="pd-assistant-input">Digite sua resposta</label>
-          <input id="pd-assistant-input" autocomplete="off" maxlength="120" placeholder="Digite sua resposta..." />
-          <button type="submit" aria-label="Enviar resposta">
+          <label class="sr-only" for="pd-assistant-input">Digite sua mensagem</label>
+          <input id="pd-assistant-input" autocomplete="off" maxlength="480" placeholder="Digite sua mensagem..." />
+          <button type="submit" aria-label="Enviar mensagem">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 20.5 3l-5.8 18-3.2-7-8.5-2.5Zm8.5 2.5 9-11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </form>
-        <p class="pd-assistant-privacy">Suas respostas ficam neste navegador até você abrir o WhatsApp.</p>
+        <p class="pd-assistant-privacy">O Hélio usa a conversa para entender seu objetivo e encaminhar o atendimento pelo WhatsApp.</p>
       </section>
     `;
     document.body.appendChild(root);
@@ -137,14 +146,24 @@
   const options = root.querySelector('.pd-assistant-options');
   const form = root.querySelector('.pd-assistant-form');
   const input = root.querySelector('#pd-assistant-input');
+  const submitButton = form.querySelector('button');
   const progress = root.querySelector('.pd-assistant-progress span');
+
+  function greetingText() {
+    return 'Olá! Eu sou o Hélio, consultor da Propagação Digital.\n' +
+      'Me diga o seu nome e,\n' +
+      'me fale um pouco do seu negócio ou do seu objetivo\n' +
+      'para que eu possa te entender bem e\n' +
+      'indicar a melhor solução pra você!\n' +
+      'Vamos lá! 😄';
+  }
 
   function openAssistant() {
     panel.hidden = false;
     requestAnimationFrame(() => panel.classList.add('is-open'));
     launcher.setAttribute('aria-expanded', 'true');
     launcher.classList.add('is-hidden');
-    renderStep();
+    renderConversation();
     window.setTimeout(() => input.focus(), 250);
   }
 
@@ -158,334 +177,242 @@
   }
 
   function resetAssistant() {
-    state = { ...initialState };
-    saveState();
-    messages.innerHTML = '';
-    options.innerHTML = '';
-    renderGreeting();
+    lead = { ...initialLead };
+    chatMessages = [];
+    saveConversation();
+    input.disabled = false;
+    submitButton.disabled = false;
+    renderConversation();
   }
 
-  function addMessage(text, type, allowHtml) {
+  function addMessageToDom(text, type) {
     const message = document.createElement('div');
     message.className = `pd-assistant-message is-${type}`;
-    message.innerHTML = allowHtml ? text : escapeHtml(text);
+    message.innerHTML = nl2br(text);
     messages.appendChild(message);
     messages.scrollTop = messages.scrollHeight;
   }
 
-  function addTyping(callback) {
+  function renderConversation() {
+    messages.innerHTML = '';
+    options.innerHTML = '';
+
+    if (!chatMessages.length) {
+      chatMessages.push({ role: 'assistant', content: greetingText() });
+      saveConversation();
+    }
+
+    chatMessages.forEach((message) => {
+      addMessageToDom(message.content, message.role === 'user' ? 'user' : 'bot');
+    });
+
+    updateProgress();
+    renderActions();
+  }
+
+  function addTyping() {
     const typing = document.createElement('div');
     typing.className = 'pd-assistant-message is-bot pd-assistant-typing';
     typing.innerHTML = '<span></span><span></span><span></span>';
     messages.appendChild(typing);
     messages.scrollTop = messages.scrollHeight;
-    window.setTimeout(() => {
-      typing.remove();
-      callback();
-      messages.scrollTop = messages.scrollHeight;
-    }, 420);
+    return typing;
   }
 
-  function setOptions(items) {
-    options.innerHTML = '';
-    items.forEach((item) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.textContent = item.label;
-      button.dataset.value = item.value;
-      button.addEventListener('click', () => submitAnswer(item.value, item.label));
-      options.appendChild(button);
-    });
+  function updateProgress() {
+    let value = 12;
+    if (lead.name) value += 18;
+    if (lead.business) value += 18;
+    if (lead.goal) value += 18;
+    if (lead.service) value += 16;
+    if (lead.urgency || lead.budget || lead.ready) value += 18;
+    progress.style.width = `${Math.min(value, 100)}%`;
   }
 
-  function setProgress(value) {
-    progress.style.width = `${value}%`;
-  }
-
-  function renderGreeting() {
-    setProgress(8);
-    input.placeholder = 'Digite seu primeiro nome...';
-    addMessage('Olá! Eu sou o Hélio, consultor da Propagação Digital.', 'bot');
-    addTyping(() => addMessage(
-      'Me diga o seu nome e,<br>' +
-      'me fale um pouco do seu negócio ou do seu objetivo<br>' +
-      'para que eu possa te entender bem e<br>' +
-      'indicar a melhor solução pra você!<br>' +
-      'Vamos lá! 😄',
-      'bot',
-      true
-    ));
-  }
-
-  function renderStep() {
+  function renderActions() {
     options.innerHTML = '';
 
-    if (!messages.children.length) {
-      if (state.completed) {
-        renderResult();
-        return;
-      }
-      renderGreeting();
-      return;
+    if (lead.service && services[lead.service]) {
+      addAction('Conhecer solução', () => {
+        window.location.href = services[lead.service].path;
+      });
     }
 
-    const steps = {
-      business() {
-        setProgress(24);
-        input.placeholder = 'Ex.: clínica, loja, prestador de serviço...';
-        addTyping(() => addMessage(
-          `Prazer, ${escapeHtml(state.name)}!<br>` +
-          'Agora me fale um pouco do seu negócio ou do seu objetivo.',
-          'bot',
-          true
-        ));
-      },
-      goal() {
-        setProgress(40);
-        input.placeholder = 'Você também pode escrever seu objetivo...';
-        addTyping(() => {
-          addMessage('Qual resultado você mais quer conquistar agora?', 'bot');
-          setOptions([
-            { value: 'site', label: 'Ter um site profissional' },
-            { value: 'vendas', label: 'Vender mais pela internet' },
-            { value: 'google', label: 'Aparecer no Google' },
-            { value: 'leads', label: 'Receber mais contatos' },
-            { value: 'atendimento', label: 'Automatizar atendimento' },
-            { value: 'conteudo', label: 'Melhorar vídeos e artes' }
-          ]);
-        });
-      },
-      presence() {
-        setProgress(58);
-        input.placeholder = 'Conte brevemente como está hoje...';
-        addTyping(() => {
-          addMessage('Como está sua presença digital hoje?', 'bot');
-          setOptions([
-            { value: 'nenhuma', label: 'Ainda não comecei' },
-            { value: 'social', label: 'Só Instagram ou redes sociais' },
-            { value: 'site-fraco', label: 'Tenho site, mas não gera contatos' },
-            { value: 'anuncios', label: 'Já anuncio e quero melhorar' },
-            { value: 'estrutura', label: 'Tenho estrutura e quero escalar' }
-          ]);
-        });
-      },
-      urgency() {
-        setProgress(74);
-        input.placeholder = 'Digite o prazo desejado...';
-        addTyping(() => {
-          addMessage('Quando você gostaria de colocar essa solução em funcionamento?', 'bot');
-          setOptions([
-            { value: 'imediato', label: 'O quanto antes' },
-            { value: '30-dias', label: 'Nos próximos 30 dias' },
-            { value: '60-dias', label: 'Em até 2 meses' },
-            { value: 'pesquisa', label: 'Estou pesquisando' }
-          ]);
-        });
-      },
-      investment() {
-        setProgress(88);
-        input.placeholder = 'Você pode informar uma faixa diferente...';
-        addTyping(() => {
-          addMessage('Para eu indicar um caminho realista, qual faixa de investimento você considera?', 'bot');
-          setOptions([
-            { value: 'ate-1500', label: 'Até R$ 1.500' },
-            { value: '1500-3000', label: 'R$ 1.500 a R$ 3.000' },
-            { value: '3000-7000', label: 'R$ 3.000 a R$ 7.000' },
-            { value: 'acima-7000', label: 'Acima de R$ 7.000' },
-            { value: 'orientacao', label: 'Preciso de orientação' }
-          ]);
-        });
-      }
-    };
-
-    if (steps[state.step]) steps[state.step]();
+    if (lead.name || lead.business || lead.goal || lead.service) {
+      addAction('Continuar no WhatsApp', () => {
+        window.open(buildWhatsappUrl(), '_blank', 'noopener');
+      });
+    }
   }
 
-  function normalizeGoal(value) {
-    const text = value.toLowerCase();
-    if (/(loja|e-?commerce|produto|vender online)/.test(text)) return 'vendas';
-    if (/(site|página institucional|presença online)/.test(text)) return 'site';
-    if (/(google|seo|busca|encontrad)/.test(text)) return 'google';
-    if (/(anúncio|anuncio|tráfego|trafego|lead|contato|cliente)/.test(text)) return 'leads';
-    if (/(automat|atendimento|agente|chat|whatsapp|ia)/.test(text)) return 'atendimento';
-    if (/(arte|vídeo|video|design|conteúdo|conteudo|social)/.test(text)) return 'conteudo';
-    return value;
+  function addAction(label, handler) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = label;
+    button.addEventListener('click', handler);
+    options.appendChild(button);
   }
 
-  function submitAnswer(value, visibleLabel) {
-    const answer = value.trim();
-    if (!answer) return;
+  async function submitMessage(text) {
+    const content = text.trim();
+    if (!content || isSending) return;
 
-    options.innerHTML = '';
-    addMessage(visibleLabel || answer, 'user');
+    isSending = true;
     input.value = '';
+    input.disabled = true;
+    submitButton.disabled = true;
+    options.innerHTML = '';
 
-    switch (state.step) {
-      case 'name':
-        state.name = answer.split(' ')[0].slice(0, 30);
-        state.step = 'business';
-        break;
-      case 'business':
-        state.business = answer.slice(0, 100);
-        state.step = 'goal';
-        break;
-      case 'goal':
-        state.goal = normalizeGoal(answer);
-        state.step = 'presence';
-        break;
-      case 'presence':
-        state.presence = answer;
-        state.step = 'urgency';
-        break;
-      case 'urgency':
-        state.urgency = answer;
-        state.step = 'investment';
-        break;
-      case 'investment':
-        state.investment = answer;
-        state.recommendation = recommendService();
-        state.score = calculateScore();
-        state.completed = true;
-        state.step = 'result';
-        break;
-      default:
-        return;
+    chatMessages.push({ role: 'user', content });
+    addMessageToDom(content, 'user');
+    saveConversation();
+
+    const typing = addTyping();
+
+    try {
+      const result = await askHelio();
+      if (result.lead) lead = { ...lead, ...result.lead };
+      const reply = result.reply || fallbackReply(content);
+      chatMessages.push({ role: 'assistant', content: reply });
+      typing.remove();
+      addMessageToDom(reply, 'bot');
+    } catch {
+      const reply = fallbackReply(content);
+      chatMessages.push({ role: 'assistant', content: reply });
+      typing.remove();
+      addMessageToDom(reply, 'bot');
+    } finally {
+      saveConversation();
+      updateProgress();
+      renderActions();
+      input.disabled = false;
+      submitButton.disabled = false;
+      isSending = false;
+      input.focus();
+    }
+  }
+
+  async function askHelio() {
+    const response = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        lead,
+        messages: chatMessages.slice(-18),
+        page: document.title,
+        path: window.location.pathname
+      })
+    });
+
+    if (!response.ok) throw new Error('Atendimento indisponível');
+    return response.json();
+  }
+
+  function cleanName(name) {
+    const ignored = ['ola', 'olá', 'oi', 'opa', 'bom', 'boa', 'meu', 'nome', 'sou'];
+    return String(name || '')
+      .split(/\s+/)
+      .map((part) => part.replace(/[^A-Za-zÀ-ÿ'-]/g, ''))
+      .find((part) => part.length > 1 && !ignored.includes(part.toLowerCase())) || '';
+  }
+
+  function updateLeadLocally(text) {
+    const lower = text.toLowerCase();
+    const nameMatch = text.match(/(?:meu nome (?:é|e|\?)|me chamo|sou|aqui (?:é|e|\?)|nome (?:é|e|\?))\s+([A-Za-zÀ-ÿ'-]{2,})/i);
+    const correctionMatch = text.match(/(?:n(?:ão|ao|\?) .*?nome.*?(?:é|e|\?)|meu nome n(?:ão|ao|\?) .*?(?:é|e|\?).*?meu nome (?:é|e|\?)|nome correto (?:é|e|\?))\s+([A-Za-zÀ-ÿ'-]{2,})/i);
+    const extractedName = cleanName((correctionMatch || nameMatch || [])[1]);
+
+    if (extractedName) lead.name = extractedName;
+
+    const serviceSignals = [
+      ['agentes', /(atendente|atendimento|chatbot|chat|responder cliente|qualificar lead)/],
+      ['automacao', /(automat|ia|inteligência artificial|processo repetitivo)/],
+      ['trafego', /(tráfego|trafego|anúncio|anuncio|ads|google ads|meta ads|facebook|instagram)/],
+      ['seo', /(seo|google|busca|pesquisa|ranquear|aparecer)/],
+      ['lojas', /(loja virtual|ecommerce|e-commerce|catálogo|catalogo|produto|vender online)/],
+      ['landing', /(landing|página de venda|pagina de venda|capturar lead|whatsapp)/],
+      ['conteudo', /(vídeo|video|arte|criativo|design|post|conteúdo|conteudo)/],
+      ['sites', /(site|website|página profissional|pagina profissional|presença online)/]
+    ];
+
+    const found = serviceSignals.find(([, pattern]) => pattern.test(lower));
+    if (found) {
+      lead.service = found[0];
+      lead.goal = services[found[0]].pitch;
     }
 
-    saveState();
-    if (state.completed) renderResult();
-    else renderStep();
+    if (!lead.business && lower.length > 18 && /(negócio|negocio|empresa|loja|clínica|clinica|serviço|servico|vendo|trabalho|quero)/.test(lower)) {
+      lead.business = text.slice(0, 180);
+    }
+
+    if (/(urgente|hoje|agora|rápido|rapido|essa semana|quanto antes)/.test(lower)) lead.urgency = 'urgente';
+    if (/r\$\s?\d|reais|orçamento|orcamento|investir|valor|preço|preco/.test(lower)) lead.budget = text.slice(0, 120);
   }
 
-  function recommendService() {
-    const goal = state.goal.toLowerCase();
-    const presence = state.presence.toLowerCase();
-    const business = state.business.toLowerCase();
+  function fallbackReply(text) {
+    updateLeadLocally(text);
 
-    if (goal === 'atendimento') return /agente|whatsapp|responder|atendimento/.test(goal + business) ? 'agentes' : 'automacao';
-    if (goal === 'google') return presence === 'nenhuma' || presence === 'social' ? 'sites' : 'seo';
-    if (goal === 'conteudo') return 'conteudo';
-    if (goal === 'site') return /produto|loja|varejo|e-?commerce/.test(business) ? 'lojas' : 'sites';
-    if (goal === 'vendas') return /produto|loja|varejo|e-?commerce/.test(business) ? 'lojas' : 'landing';
-    if (goal === 'leads') return presence === 'nenhuma' || presence === 'social' ? 'landing' : 'trafego';
-    return 'sites';
-  }
+    if (/não.*nome|nome.*correto|meu nome é/i.test(text) && lead.name) {
+      return `Perfeito, ${lead.name}. Corrigi aqui.\nAgora me conte: qual é o seu negócio e o que você quer melhorar primeiro?`;
+    }
 
-  function calculateScore() {
-    let score = 35;
-    if (state.urgency === 'imediato') score += 30;
-    else if (state.urgency === '30-dias') score += 22;
-    else if (state.urgency === '60-dias') score += 12;
+    if (/preço|preco|valor|quanto custa|orçamento|orcamento/i.test(text)) {
+      return 'Consigo te orientar sim. O valor depende do tipo de solução, estrutura necessária e urgência.\nMe diga qual serviço você está buscando e como está sua empresa hoje, que eu te indico o caminho mais realista.';
+    }
 
-    if (state.investment === 'acima-7000') score += 28;
-    else if (state.investment === '3000-7000') score += 23;
-    else if (state.investment === '1500-3000') score += 15;
-    else if (state.investment === 'ate-1500') score += 7;
-    else score += 10;
+    if (/quais serviços|o que vocês fazem|serviços|servicos/i.test(text)) {
+      return 'A Propagação Digital faz sites profissionais, lojas virtuais, landing pages, SEO, tráfego pago, automações com IA, agentes de atendimento, vídeos e artes.\nMe diga seu objetivo principal que eu te digo qual desses resolve melhor.';
+    }
 
-    if (state.presence === 'anuncios' || state.presence === 'estrutura') score += 7;
-    return Math.min(score, 100);
-  }
+    if (!lead.name) {
+      return 'Entendi. Antes de te orientar melhor, me diga seu nome, por favor.';
+    }
 
-  function leadLabel() {
-    if (state.score >= 80) return 'Prioridade alta';
-    if (state.score >= 60) return 'Boa oportunidade';
-    return 'Projeto em planejamento';
-  }
+    if (!lead.business) {
+      return `Prazer, ${lead.name}.\nMe fale um pouco do seu negócio ou do objetivo que você quer alcançar. Pode escrever do seu jeito.`;
+    }
 
-  function answerLabel(key, value) {
-    const labels = {
-      goal: {
-        site: 'Ter um site profissional',
-        vendas: 'Vender mais pela internet',
-        google: 'Aparecer no Google',
-        leads: 'Receber mais contatos',
-        atendimento: 'Automatizar atendimento',
-        conteudo: 'Melhorar vídeos e artes'
-      },
-      presence: {
-        nenhuma: 'Ainda não começou',
-        social: 'Só redes sociais',
-        'site-fraco': 'Site sem geração de contatos',
-        anuncios: 'Já anuncia',
-        estrutura: 'Estrutura pronta para escalar'
-      },
-      urgency: {
-        imediato: 'O quanto antes',
-        '30-dias': 'Próximos 30 dias',
-        '60-dias': 'Até 2 meses',
-        pesquisa: 'Em pesquisa'
-      },
-      investment: {
-        'ate-1500': 'Até R$ 1.500',
-        '1500-3000': 'R$ 1.500 a R$ 3.000',
-        '3000-7000': 'R$ 3.000 a R$ 7.000',
-        'acima-7000': 'Acima de R$ 7.000',
-        orientacao: 'Precisa de orientação'
-      }
-    };
-    return labels[key]?.[value] || value;
+    if (lead.service && services[lead.service]) {
+      return `${lead.name}, pelo que você explicou, o caminho mais indicado parece ser ${services[lead.service].name}.\n${services[lead.service].pitch}.\nSe quiser, eu já posso abrir o WhatsApp com esse contexto organizado para você falar com a Propagação Digital.`;
+    }
+
+    return `${lead.name}, entendi. Para te indicar a solução certa, me diga o que pesa mais agora: aparecer no Google, vender mais, criar um site, melhorar atendimento ou automatizar processos?`;
   }
 
   function buildWhatsappUrl() {
-    const service = services[state.recommendation];
+    const service = lead.service && services[lead.service] ? services[lead.service].name : 'A definir';
+    const transcript = chatMessages
+      .filter((message) => message.role === 'user')
+      .slice(-6)
+      .map((message) => `- ${message.content}`)
+      .join('\n');
+
     const message = [
-      `Olá, sou ${state.name}. Fiz a análise no site da Propagação Digital.`,
+      `Olá, sou ${lead.name || 'um visitante do site'}. Falei com o Hélio no site da Propagação Digital.`,
       '',
-      `Negócio: ${state.business}`,
-      `Objetivo: ${answerLabel('goal', state.goal)}`,
-      `Situação atual: ${answerLabel('presence', state.presence)}`,
-      `Prazo: ${answerLabel('urgency', state.urgency)}`,
-      `Investimento considerado: ${answerLabel('investment', state.investment)}`,
-      `Solução recomendada: ${service.name}`,
-      `Qualificação: ${leadLabel()} (${state.score}/100)`,
+      `Nome: ${lead.name || 'Não informado'}`,
+      `Negócio/objetivo: ${lead.business || lead.goal || 'Não informado'}`,
+      `Solução indicada: ${service}`,
+      `Urgência: ${lead.urgency || 'Não informada'}`,
+      `Investimento/valor comentado: ${lead.budget || 'Não informado'}`,
       '',
-      'Quero conversar sobre o melhor plano para começar.'
+      'Resumo do que eu expliquei:',
+      transcript || '- Ainda vou explicar pelo WhatsApp.',
+      '',
+      'Quero continuar o atendimento.'
     ].join('\n');
+
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-  }
-
-  function renderResult() {
-    options.innerHTML = '';
-    setProgress(100);
-    input.placeholder = 'Atendimento concluído';
-    input.disabled = true;
-    form.querySelector('button').disabled = true;
-
-    const service = services[state.recommendation];
-    addTyping(() => {
-      addMessage(
-        `<strong>${escapeHtml(state.name)}, encontrei o caminho mais indicado.</strong><br>Para o seu momento, recomendo <b>${escapeHtml(service.name)}</b>: ${escapeHtml(service.pitch)}.`,
-        'bot',
-        true
-      );
-      addMessage(
-        `<div class="pd-assistant-result">
-          <span class="pd-assistant-result-label">${leadLabel()}</span>
-          <strong>${escapeHtml(service.name)}</strong>
-          <p>Seu diagnóstico já está organizado. Ao continuar, o WhatsApp abrirá com todo o contexto para você não precisar explicar tudo novamente.</p>
-          <a class="pd-assistant-whatsapp" href="${buildWhatsappUrl()}" target="_blank" rel="noopener">Continuar no WhatsApp</a>
-          <a class="pd-assistant-service-link" href="${service.path}">Conhecer esta solução</a>
-        </div>`,
-        'bot',
-        true
-      );
-    });
   }
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (state.completed) return;
-    submitAnswer(input.value);
+    submitMessage(input.value);
   });
 
   launcher.addEventListener('click', openAssistant);
   closeButton.addEventListener('click', closeAssistant);
-  resetButton.addEventListener('click', () => {
-    input.disabled = false;
-    form.querySelector('button').disabled = false;
-    resetAssistant();
-  });
+  resetButton.addEventListener('click', resetAssistant);
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && panel.classList.contains('is-open')) closeAssistant();
