@@ -4,7 +4,7 @@
   const WHATSAPP_NUMBER = '5591987137397';
   const STORAGE_KEY = 'pd-assistente-helio-v2';
   const API_ENDPOINT = '/api/atendimento';
-  const RESPONSE_DELAY_MS = 15000;
+  const RESPONSE_DELAY_MS = 10000;
 
   const services = {
     sites: {
@@ -214,7 +214,7 @@
   function addTyping() {
     const typing = document.createElement('div');
     typing.className = 'pd-assistant-message is-bot pd-assistant-typing';
-    typing.innerHTML = 'digitando...';
+    typing.innerHTML = 'digitando<span class="pd-typing-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>';
     messages.appendChild(typing);
     messages.scrollTop = messages.scrollHeight;
     return typing;
