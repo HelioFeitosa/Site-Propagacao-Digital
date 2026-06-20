@@ -113,12 +113,43 @@ function extractMoneyValue(text) {
   return '';
 }
 
+function isNameQuestion(text) {
+  return hasAny(normalizeForMatch(text), [
+    /qual.*meu nome/,
+    /como.*meu nome/,
+    /sabe.*meu nome/,
+    /lembra.*meu nome/
+  ]);
+}
+
+function isFrustrated(text) {
+  return hasAny(normalizeForMatch(text), [
+    /doido/,
+    /maluco/,
+    /retardado/,
+    /imbecil/,
+    /burro/,
+    /burra/,
+    /maquina/,
+    /maquina burra/,
+    /robo burro/,
+    /nao pensa/,
+    /nao raciocina/,
+    /inconsistente/,
+    /inconcistente/,
+    /ja te falei/,
+    /acabei de falar/,
+    /responde direito/
+  ]);
+}
+
 function buildMemorySummary(lead, messages) {
   const facts = [];
   if (lead.name) facts.push(`Nome: ${lead.name}`);
   if (lead.business) facts.push(`Negócio informado: ${lead.business}`);
   if (lead.productDetail) facts.push(`Produto/detalhe já citado: ${lead.productDetail}`);
   if (lead.productPrice) facts.push(`Preço do produto já citado: ${lead.productPrice}`);
+  if (lead.deliveryArea) facts.push(`Área de entrega já citada: ${lead.deliveryArea}`);
   if (lead.goal) facts.push(`Objetivo informado: ${lead.goal}`);
   if (lead.salesGoal) facts.push(`Meta comercial já citada: ${lead.salesGoal}`);
   if (lead.service && services[lead.service]) facts.push(`Serviço provável: ${services[lead.service]}`);
@@ -154,18 +185,33 @@ function updateLead(lead, messages) {
   const normalizedLastAssistant = normalizeForMatch(lastAssistant);
   const normalizedConversation = normalizeForMatch(fullConversationText);
 
-  const namePatterns = [
-    /(?:n(?:ão|ao|\?) .*?nome.*?(?:é|e|\?)|meu nome n(?:ão|ao|\?) .*?(?:é|e|\?).*?meu nome (?:é|e|\?)|nome correto (?:é|e|\?)|corrigindo.*?nome.*?(?:é|e|\?))\s+([A-Za-zÀ-ÿ'-]{2,})/i,
-    /(?:meu nome (?:é|e|\?)|meu no (?:é|e|\?)|me chamo|eu sou|sou|aqui (?:é|e|\?)|nome (?:é|e|\?))\s+(?:a|o)?\s*([A-Za-zÀ-ÿ'-]{2,})/i,
-    /(?:olá|ola|oi|opa),?\s*(?:meu nome é|me chamo|sou)?\s*([A-Za-zÀ-ÿ'-]{2,})/i
-  ];
-  const extractedName = cleanName((namePatterns.map((pattern) => lastUser.match(pattern)).find(Boolean) || [])[1]);
-  if (extractedName) next.name = extractedName;
+  if (!isNameQuestion(lastUser)) {
+    const correctionNamePatterns = [
+      /(?:n(?:ão|ao|\?) .*?nome.*?(?:é|e)|meu nome n(?:ão|ao|\?) .*?(?:é|e).*?meu nome (?:é|e)|nome correto (?:é|e)|corrigindo.*?nome.*?(?:é|e))\s+([A-Za-zÀ-ÿ'-]{2,})/i
+    ];
+    const directNamePatterns = [
+      /(?:meu nome (?:é|e)|meu no (?:é|e)|me chamo|eu sou|sou|aqui (?:é|e)|nome (?:é|e))\s+(?:a|o)?\s*([A-Za-zÀ-ÿ'-]{2,})/i,
+      /(?:olá|ola|oi|opa),?\s*(?:meu nome é|me chamo|sou)\s*([A-Za-zÀ-ÿ'-]{2,})/i
+    ];
+    const correctionName = cleanName((correctionNamePatterns.map((pattern) => lastUser.match(pattern)).find(Boolean) || [])[1]);
+    const extractedName = cleanName((directNamePatterns.map((pattern) => lastUser.match(pattern)).find(Boolean) || [])[1]);
+    if (correctionName) next.name = correctionName;
+    else if (extractedName && !next.name) next.name = extractedName;
 
-  if (!next.name) {
-    const normalizedNameMatch = normalizedAll.match(/(?:meu\s+n(?:ome|o)\s*(?:e|eh)?|me\s+chamo|eu\s+sou|sou)\s+(?:a|o)?\s*([a-z]{2,})/i);
-    const normalizedName = cleanName((normalizedNameMatch || [])[1]);
-    if (normalizedName) next.name = normalizedName;
+    if (!next.name) {
+      const firstBusinessMessage = messages
+        .filter((message) => message.role === 'user')
+        .map((message) => message.content)
+        .find((text) => /(?:vendo|venda|tenho|trabalho|preciso|quero)\b/i.test(text));
+      const firstTokenName = cleanName((firstBusinessMessage?.match(/^\s*([A-Za-zÀ-ÿ'-]{2,})\s+(?:vendo|venda|tenho|trabalho|preciso|quero)\b/i) || [])[1]);
+      if (firstTokenName) next.name = firstTokenName;
+    }
+
+    if (!next.name) {
+      const normalizedNameMatch = normalizedAll.match(/(?:meu\s+n(?:ome|o)\s*(?:e|eh)|me\s+chamo|eu\s+sou|sou)\s+(?:a|o)?\s*([a-z]{2,})/i);
+      const normalizedName = cleanName((normalizedNameMatch || [])[1]);
+      if (normalizedName) next.name = normalizedName;
+    }
   }
 
   if (hasAny(normalizedLast, [/de onde.*tirou/, /nao.*foi.*isso/, /nao.*e.*isso/, /nao.*quero.*isso/])) {
@@ -229,6 +275,49 @@ function updateLead(lead, messages) {
   const productPrice = extractMoneyValue(lastUser);
   if (productPrice && (next.productDetail || priceWasAsked)) {
     next.productPrice = productPrice;
+  }
+
+  if (!next.productPrice && (next.productDetail || priceWasAsked)) {
+    for (let index = 1; index < messages.length; index += 1) {
+      const previous = messages[index - 1];
+      const current = messages[index];
+      if (current.role !== 'user') continue;
+      const previousAskedPrice = previous.role === 'assistant' && hasAny(normalizeForMatch(previous.content), [
+        /preco do litro/,
+        /preço do litro/,
+        /qual.*preco/,
+        /qual.*preço/,
+        /valor do litro/
+      ]);
+      const historicalPrice = extractMoneyValue(current.content);
+      if (previousAskedPrice && historicalPrice) next.productPrice = historicalPrice;
+    }
+  }
+
+  const deliveryWasAsked = hasAny(normalizedLastAssistant, [/entrega.*bairro|entrega em quais bairros|quais bairros|area de entrega|área de entrega|regiao de entrega|região de entrega/]) ||
+    hasAny(normalizedConversation, [/entrega em quais bairros|quais bairros.*entrega|area de entrega|área de entrega/]);
+  if (deliveryWasAsked && hasAny(normalizedLast, [/so no meu bairro|só no meu bairro|meu bairro|somente no bairro|apenas no bairro|no bairro/])) {
+    next.deliveryArea = 'somente no próprio bairro';
+  }
+
+  if (!next.deliveryArea && deliveryWasAsked) {
+    for (let index = 1; index < messages.length; index += 1) {
+      const previous = messages[index - 1];
+      const current = messages[index];
+      if (current.role !== 'user') continue;
+      const previousAskedDelivery = previous.role === 'assistant' && hasAny(normalizeForMatch(previous.content), [
+        /entrega.*bairro/,
+        /entrega em quais bairros/,
+        /quais bairros/,
+        /area de entrega/,
+        /área de entrega/,
+        /regiao de entrega/,
+        /região de entrega/
+      ]);
+      if (previousAskedDelivery && hasAny(normalizeForMatch(current.content), [/so no meu bairro|só no meu bairro|meu bairro|somente no bairro|apenas no bairro|no bairro/])) {
+        next.deliveryArea = 'somente no próprio bairro';
+      }
+    }
   }
 
   if (hasAny(normalizedAll, [/whatsapp|zap|zapi/])) next.channel = 'WhatsApp';
@@ -308,6 +397,7 @@ Nome: ${lead.name || 'não informado'}
 Negócio/objetivo: ${lead.business || lead.goal || 'não informado'}
 Produto/detalhe já citado: ${lead.productDetail || 'não informado'}
 Preço do produto já citado: ${lead.productPrice || 'não informado'}
+Área de entrega já citada: ${lead.deliveryArea || 'não informada'}
 Meta comercial já citada: ${lead.salesGoal || 'não informada'}
 Serviço provável: ${lead.service ? services[lead.service] : 'não definido'}
 Canal de venda já citado: ${lead.channel || 'não informado'}
@@ -410,8 +500,8 @@ async function callGemini(messages, lead, page, path) {
       },
       contents: toGeminiContents(messages),
       generationConfig: {
-        temperature: 0.72,
-        topP: 0.9,
+        temperature: 0.25,
+        topP: 0.75,
         maxOutputTokens: 2048,
         thinkingConfig: {
           thinkingBudget: 0
@@ -435,6 +525,29 @@ function priorityReply(lead, lastUserText = '', messages = []) {
     .map((message) => message.content)
     .join('\n'));
 
+  if (isNameQuestion(lastUserText)) {
+    if (lead.name) {
+      return `Seu nome é ${lead.name}.\n\nEu errei ao repetir perguntas que você já tinha respondido.\nVou seguir com o que já tenho anotado.`;
+    }
+
+    return 'Você ainda não me disse seu nome com clareza.\n\nMe diga só seu nome, por favor.';
+  }
+
+  if (isFrustrated(lastUserText)) {
+    const known = [];
+    if (lead.name) known.push(`seu nome é ${lead.name}`);
+    if (lead.productDetail) known.push(`você vende ${lead.productDetail}`);
+    if (lead.productPrice) known.push(`o preço é ${lead.productPrice} o litro`);
+    if (lead.deliveryArea) known.push(`a entrega é ${lead.deliveryArea}`);
+
+    return `Você tem razão em reclamar.\n\nEu repeti pergunta que você já tinha respondido.\n\nO que eu tenho anotado até aqui:\n${known.length ? known.map((item) => `- ${item}`).join('\n') : '- ainda faltam dados claros'}\n\nVou continuar a partir disso, sem voltar para o começo.\n\nO próximo passo correto é montar a oferta e encaminhar para o WhatsApp com esse resumo.`;
+  }
+
+  if (lead.deliveryArea && hasAny(last, [/so no meu bairro|só no meu bairro|meu bairro|somente no bairro|apenas no bairro|no bairro/])) {
+    const name = lead.name ? `${lead.name}, ` : '';
+    return `${name}perfeito.\n\nÁrea de entrega anotada:\n${lead.deliveryArea}.\n\nResumo da oferta até aqui:\n- açaí em litro, polpa in natura;\n- ${lead.productPrice || 'preço ainda não informado'} o litro;\n- entrega ${lead.deliveryArea};\n- pedido direto pelo WhatsApp.\n\nAgora falta só definir uma chamada forte para o anúncio.\n\nVocê prefere destacar “açaí puro/in natura” ou “entrega rápida no bairro”?`;
+  }
+
   const acaiContext = context.includes('acai') || context.includes('açaí') || lead.productDetail;
   const mentionsAcaiLiter = acaiContext && hasAny(last, [
     /litro/,
@@ -452,6 +565,10 @@ function priorityReply(lead, lastUserText = '', messages = []) {
   if (mentionsAcaiLiter) {
     const name = lead.name ? `${lead.name}, ` : '';
     if (lead.productPrice) {
+      if (lead.deliveryArea) {
+        return `${name}agora fechou.\n\nProduto:\naçaí em litro,\npolpa in natura.\n\nPreço:\n${lead.productPrice} o litro.\n\nEntrega:\n${lead.deliveryArea}.\n\nCom isso, a oferta fica pronta para WhatsApp e anúncio local.\n\nVocê prefere destacar “açaí puro/in natura” ou “entrega rápida no bairro”?`;
+      }
+
       return `${name}agora fechou.\n\nProduto:\naçaí em litro,\npolpa in natura.\n\nPreço:\n${lead.productPrice} o litro.\n\nCom isso, eu já montaria a oferta assim:\n**Açaí in natura por litro no seu bairro**\n\nPedido direto pelo WhatsApp,\ncom retirada ou entrega combinada.\n\nAgora preciso só de uma coisa para deixar a campanha mais certeira:\nvocê entrega em quais bairros?`;
     }
 
@@ -461,6 +578,11 @@ function priorityReply(lead, lastUserText = '', messages = []) {
   if (lead.productDetail && lead.productPrice && hasAny(last, [/^(?:r\$\s*)?\d{1,5}(?:[,.]\d{2})?$/, /reais|real|o litro|por litro/])) {
     const name = lead.name ? `${lead.name}, ` : '';
     return `${name}perfeito.\n\nPreço anotado:\n${lead.productPrice} o litro.\n\nAgora a oferta já começa a ficar clara:\naçaí em litro,\npolpa in natura,\npedido direto pelo WhatsApp.\n\nPara segmentar bem os anúncios,\nvocê entrega em quais bairros?`;
+  }
+
+  if (lead.productDetail && lead.productPrice && lead.deliveryArea) {
+    const name = lead.name ? `${lead.name}, ` : '';
+    return `${name}já tenho os pontos principais:\n\n- produto: açaí em litro, polpa in natura;\n- preço: ${lead.productPrice} o litro;\n- entrega: ${lead.deliveryArea}.\n\nAgora posso conduzir para a oferta e o WhatsApp.\n\nVocê tem foto real do produto para usar no anúncio?`;
   }
 
   return '';
@@ -492,6 +614,10 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
     if (lead.productDetail) {
       const name = lead.name ? `${lead.name}, ` : '';
       if (lead.productPrice) {
+        if (lead.deliveryArea) {
+          return `${name}perfeito.\n\nJá tenho o produto, preço e entrega:\naçaí em litro,\npolpa in natura,\n${lead.productPrice} o litro,\nentrega ${lead.deliveryArea}.\n\nAgora o melhor é montar a oferta e levar o cliente para o WhatsApp.\n\nVocê tem foto real da polpa ou da embalagem?`;
+        }
+
         return `${name}perfeito.\n\nJá tenho o produto e o preço:\naçaí em litro,\npolpa in natura,\n${lead.productPrice} o litro.\n\nAgora precisamos definir a área de entrega.\n\nVocê entrega em quais bairros?`;
       }
 
@@ -515,6 +641,10 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
       if (lead.productDetail) {
         const name = lead.name ? `${lead.name}, ` : '';
         if (lead.productPrice) {
+          if (lead.deliveryArea) {
+            return `${name}perfeito.\n\nJá entendi:\naçaí em litro,\npolpa in natura,\n${lead.productPrice} o litro,\nentrega ${lead.deliveryArea}.\n\nVamos manter a estrutura simples para vender rápido:\n1. oferta clara do litro;\n2. foto real da polpa/embalagem;\n3. botão direto para pedido no WhatsApp;\n4. anúncio local no bairro.\n\nVocê tem foto real do produto para usar?`;
+          }
+
           return `${name}perfeito.\n\nJá entendi:\naçaí em litro,\npolpa in natura,\n${lead.productPrice} o litro.\n\nVamos manter a estrutura simples para vender rápido:\n1. página com a oferta do litro;\n2. fotos reais da polpa e da embalagem;\n3. botão direto para pedido no WhatsApp;\n4. anúncio local no bairro.\n\nPara anunciar do jeito certo,\nvocê entrega em quais bairros?`;
         }
 
