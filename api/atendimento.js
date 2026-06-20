@@ -90,7 +90,7 @@ function normalizeForMatch(value) {
 }
 
 function cleanName(value) {
-  const ignored = new Set(['ola', 'olá', 'oi', 'opa', 'bom', 'boa', 'meu', 'nome', 'sou', 'eu', 'a', 'o']);
+  const ignored = new Set(['ola', 'olá', 'oi', 'opa', 'bom', 'boa', 'meu', 'no', 'nome', 'sou', 'eu', 'a', 'o']);
   const name = cleanText(value, 80)
     .split(/\s+/)
     .map((part) => part.replace(/[^A-Za-zÀ-ÿ'-]/g, ''))
@@ -106,6 +106,7 @@ function buildMemorySummary(lead, messages) {
   const facts = [];
   if (lead.name) facts.push(`Nome: ${lead.name}`);
   if (lead.business) facts.push(`Negócio informado: ${lead.business}`);
+  if (lead.productDetail) facts.push(`Produto/detalhe já citado: ${lead.productDetail}`);
   if (lead.goal) facts.push(`Objetivo informado: ${lead.goal}`);
   if (lead.salesGoal) facts.push(`Meta comercial já citada: ${lead.salesGoal}`);
   if (lead.service && services[lead.service]) facts.push(`Serviço provável: ${services[lead.service]}`);
@@ -141,11 +142,17 @@ function updateLead(lead, messages) {
 
   const namePatterns = [
     /(?:n(?:ão|ao|\?) .*?nome.*?(?:é|e|\?)|meu nome n(?:ão|ao|\?) .*?(?:é|e|\?).*?meu nome (?:é|e|\?)|nome correto (?:é|e|\?)|corrigindo.*?nome.*?(?:é|e|\?))\s+([A-Za-zÀ-ÿ'-]{2,})/i,
-    /(?:meu nome (?:é|e|\?)|me chamo|eu sou|sou|aqui (?:é|e|\?)|nome (?:é|e|\?))\s+(?:a|o)?\s*([A-Za-zÀ-ÿ'-]{2,})/i,
+    /(?:meu nome (?:é|e|\?)|meu no (?:é|e|\?)|me chamo|eu sou|sou|aqui (?:é|e|\?)|nome (?:é|e|\?))\s+(?:a|o)?\s*([A-Za-zÀ-ÿ'-]{2,})/i,
     /(?:olá|ola|oi|opa),?\s*(?:meu nome é|me chamo|sou)?\s*([A-Za-zÀ-ÿ'-]{2,})/i
   ];
   const extractedName = cleanName((namePatterns.map((pattern) => lastUser.match(pattern)).find(Boolean) || [])[1]);
   if (extractedName) next.name = extractedName;
+
+  if (!next.name) {
+    const normalizedNameMatch = normalizedAll.match(/(?:meu\s+n(?:ome|o)\s*(?:e|eh)?|me\s+chamo|eu\s+sou|sou)\s+(?:a|o)?\s*([a-z]{2,})/i);
+    const normalizedName = cleanName((normalizedNameMatch || [])[1]);
+    if (normalizedName) next.name = normalizedName;
+  }
 
   if (hasAny(normalizedLast, [/de onde.*tirou/, /nao.*foi.*isso/, /nao.*e.*isso/, /nao.*quero.*isso/])) {
     delete next.service;
@@ -198,6 +205,11 @@ function updateLead(lead, messages) {
     next.business = cleanText(lastUser, 180);
   }
 
+  if (hasAny(normalizedAll, [/acai.*litro|litro.*acai|açaí.*litro|litro.*açaí|polpa|in natura|caroco|carocos|caroço|caroços/])) {
+    next.productDetail = 'açaí em litro, polpa in natura';
+    next.business = next.business || 'vende açaí em litro no bairro';
+  }
+
   if (hasAny(normalizedAll, [/whatsapp|zap|zapi/])) next.channel = 'WhatsApp';
   if (hasAny(normalizedAll, [/instagram|insta/])) next.channel = next.channel ? `${next.channel} e Instagram` : 'Instagram';
   if (hasAny(normalizedAll, [/ifood|i food/])) next.channel = next.channel ? `${next.channel} e iFood` : 'iFood';
@@ -241,6 +253,7 @@ Objetivo:
 - Antes de fazer uma pergunta, leia a memória consolidada e o histórico. Nunca pergunte de novo algo que o cliente já respondeu.
 - Se uma informação já foi dada, use essa informação e avance para a próxima etapa lógica.
 - Se o cliente responder "simples", "rápido", "simples pra vender rápido" ou "completo", aceite como resposta sobre o tipo de estrutura e avance para plano/WhatsApp. Não repita a pergunta sobre estrutura simples ou completa.
+- Se o cliente disser que vende "açaí em litro", "polpa", "in natura" ou corrigir que não vende copos/tamanhos, aceite isso como detalhe do produto. Não pergunte novamente quais tamanhos vende. Avance para preço, bairros de entrega, fotos ou oferta.
 - Faça no máximo uma pergunta por resposta.
 - Se o cliente pedir exemplo, foto ou modelo de cardápio/página, mostre um exemplo textual claro e contextualizado. Não volte para perguntas de qualificação já respondidas.
 - Se não puder enviar imagem diretamente no chat, explique como seria o modelo visual e ofereça montar um exemplo para o negócio dele.
@@ -272,6 +285,7 @@ Tom:
 Estado atual do lead:
 Nome: ${lead.name || 'não informado'}
 Negócio/objetivo: ${lead.business || lead.goal || 'não informado'}
+Produto/detalhe já citado: ${lead.productDetail || 'não informado'}
 Meta comercial já citada: ${lead.salesGoal || 'não informada'}
 Serviço provável: ${lead.service ? services[lead.service] : 'não definido'}
 Canal de venda já citado: ${lead.channel || 'não informado'}
@@ -392,6 +406,35 @@ async function callGemini(messages, lead, page, path) {
   return formatForChatReadability(extractGeminiText(data));
 }
 
+function priorityReply(lead, lastUserText = '', messages = []) {
+  const last = normalizeForMatch(lastUserText);
+  const context = normalizeForMatch(messages
+    .filter((message) => message.role === 'user')
+    .map((message) => message.content)
+    .join('\n'));
+
+  const acaiContext = context.includes('acai') || context.includes('açaí') || lead.productDetail;
+  const mentionsAcaiLiter = acaiContext && hasAny(last, [
+    /litro/,
+    /polpa/,
+    /in natura/,
+    /caroco/,
+    /carocos/,
+    /caroço/,
+    /caroços/,
+    /doido/,
+    /altista/,
+    /autista/
+  ]);
+
+  if (mentionsAcaiLiter) {
+    const name = lead.name ? `${lead.name}, ` : '';
+    return `${name}você tem razão.\n\nAgora ficou claro:\nnão é açaí no copo com tamanhos e adicionais.\n\nÉ açaí em litro,\npolpa in natura,\nfeito a partir do caroço do açaí.\n\nEntão o caminho correto é outro:\n1. página simples mostrando o litro da polpa;\n2. fotos reais do produto, embalagem e preparo;\n3. botão direto para pedido no WhatsApp;\n4. anúncio no bairro para quem compra açaí para casa, família ou revenda.\n\nPara montar a oferta certa,\nqual é o preço do litro hoje?`;
+  }
+
+  return '';
+}
+
 function fallbackReply(lead, lastUserText = '', messages = []) {
   const last = normalizeForMatch(lastUserText);
   const context = normalizeForMatch(messages
@@ -415,6 +458,16 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
   }
 
   if (hasAny(last, [/acai|delivery|cardapio|bairro|bairo|comida|lanchonete|restaurante/])) {
+    if (lead.productDetail) {
+      const name = lead.name ? `${lead.name}, ` : '';
+      return `${name}entendi.\n\nO produto é açaí em litro,\npolpa in natura.\n\nNesse caso, a página precisa vender a confiança do produto:\norigem, preparo, embalagem, retirada/entrega e pedido pelo WhatsApp.\n\nQual é o preço do litro hoje?`;
+    }
+
+    if (lead.planPreference && (lead.channel || lead.stage)) {
+      const name = lead.name ? `${lead.name}, ` : '';
+      return `${name}perfeito.\n\nComo você já escolheu uma estrutura simples,\nnão vou voltar para o começo.\n\nAgora precisamos definir o produto principal da página:\no que exatamente vai aparecer no cardápio/oferta?`;
+    }
+
     const name = lead.name ? `${lead.name}, agora entendi melhor` : 'Agora entendi melhor';
     const nextQuestion = lead.channel
       ? 'Você quer que essa estrutura seja mais simples para começar rápido ou mais completa para escalar os pedidos?'
@@ -424,6 +477,11 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
 
   if ((lead.channel || lead.stage) && (context.includes('vender') || context.includes('online') || context.includes('acai') || context.includes('bairro'))) {
     if (lead.planPreference) {
+      if (lead.productDetail) {
+        const name = lead.name ? `${lead.name}, ` : '';
+        return `${name}perfeito.\n\nJá entendi o produto:\naçaí em litro,\npolpa in natura.\n\nVamos manter a estrutura simples para vender rápido:\n1. página com a oferta do litro;\n2. fotos reais da polpa e da embalagem;\n3. botão direto para pedido no WhatsApp;\n4. anúncio local no bairro.\n\nPara fechar a oferta,\nqual é o preço do litro hoje?`;
+      }
+
       const periodLine = lead.peakPeriod ? `\nComo você vende mais pela ${lead.peakPeriod}, os anúncios devem começar antes desse horário.` : '';
       const deliveryLine = lead.delivery ? '\nComo você quer usar entregador/motoboy, o pedido precisa chegar organizado com endereço e forma de pagamento.' : '';
       return `Perfeito. Vamos pelo caminho simples para vender rápido.${periodLine}${deliveryLine}\n\nEu montaria assim:\n1. cardápio/página simples com seus principais tamanhos e adicionais;\n2. botão direto para pedido no WhatsApp;\n3. fotos boas dos copos e combos;\n4. anúncio local no bairro para gerar pedido rápido.\n\nO próximo passo é definir o cardápio inicial:\nquais tamanhos de açaí você vende hoje?`;
@@ -504,9 +562,9 @@ module.exports = async function handler(req, res) {
 
     const lead = updateLead(body.lead || {}, messages);
     nextLead = lead;
-    let reply = '';
+    let reply = priorityReply(lead, messages[messages.length - 1]?.content || '', messages);
 
-    if (GEMINI_API_KEY) {
+    if (!reply && GEMINI_API_KEY) {
       try {
         reply = await callGemini(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
       } catch (error) {
