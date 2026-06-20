@@ -72,12 +72,19 @@ function readBody(req) {
   });
 }
 
-function cleanText(value, max = 800) {
+function cleanText(value, max = 900) {
   return String(value || '')
     .replace(/[\u0000-\u001F\u007F]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, max);
+}
+
+function normalizeForMatch(value) {
+  return cleanText(value, 1800)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 }
 
 function cleanName(value) {
@@ -86,6 +93,10 @@ function cleanName(value) {
     .split(/\s+/)
     .map((part) => part.replace(/[^A-Za-zÀ-ÿ'-]/g, ''))
     .find((part) => part.length > 1 && !ignored.has(part.toLowerCase())) || '';
+}
+
+function hasAny(text, patterns) {
+  return patterns.some((pattern) => pattern.test(text));
 }
 
 function updateLead(lead, messages) {
@@ -102,9 +113,6 @@ function updateLead(lead, messages) {
     /(?:olá|ola|oi|opa),?\s*(?:meu nome é|me chamo|sou)?\s*([A-Za-zÀ-ÿ'-]{2,})/i
   ];
   const extractedName = cleanName((namePatterns.map((pattern) => lastUser.match(pattern)).find(Boolean) || [])[1]);
-  if (process.env.PD_DEBUG_ASSISTANT === '1') {
-    console.log('[pd-debug-name]', { lastUser, extractedName });
-  }
   if (extractedName) next.name = extractedName;
 
   const foundService = serviceSignals.find(([, pattern]) => pattern.test(allUserText));
@@ -132,10 +140,12 @@ Você é Hélio, consultor da Propagação Digital.
 Você conversa em português do Brasil com clientes que chegam pelo site.
 
 Objetivo:
-- Conversar de forma natural, inteligente e humana.
-- Entender o nome, negócio, objetivo, urgência e melhor solução.
-- Responder qualquer pergunta sobre os serviços sem parecer robô de script.
-- Corrigir informações quando o cliente corrigir. Exemplo: se ele disser "não, meu nome é Junior", aceite Junior e não continue chamando de Olá.
+- Conversar de forma natural, inteligente e humana, como um bom consultor comercial.
+- Entender nome, negócio, objetivo, urgência e melhor solução.
+- Responder perguntas sobre serviços sem parecer robô de script.
+- Se o cliente perguntar algo fora do assunto, responda com educação e traga a conversa de volta para o negócio.
+- Exemplo fora do assunto: se pedir receita de strogonoff, diga que até poderia ajudar, mas recomenda procurar isso no ChatGPT, e volte para site, Google, vendas, automação ou atendimento.
+- Corrigir informações quando o cliente corrigir. Exemplo: se disser "não, meu nome é Junior", aceite Junior.
 - Conduzir para WhatsApp somente quando fizer sentido, sem pressão.
 
 Serviços da Propagação Digital:
@@ -154,7 +164,6 @@ Tom:
 - Pode usar um emoji leve ocasionalmente, sem exagero.
 - Não invente preço fechado. Explique que depende do escopo e colete contexto.
 - Não diga que é IA, modelo, API ou sistema.
-- Se não souber algo externo, diga que pode confirmar no WhatsApp com a equipe.
 
 Estado atual do lead:
 Nome: ${lead.name || 'não informado'}
@@ -196,7 +205,7 @@ async function callOpenAI(messages, lead, page, path) {
         role: message.role === 'assistant' ? 'assistant' : 'user',
         content: message.content
       })),
-      max_output_tokens: 380,
+      max_output_tokens: 420,
       store: false
     })
   });
@@ -209,28 +218,66 @@ async function callOpenAI(messages, lead, page, path) {
   return extractText(data);
 }
 
-function fallbackReply(lead, lastUserText = '') {
-  if (/n(?:ão|ao|\?).*nome|nome correto|meu nome (?:é|e|\?)/i.test(lastUserText) && lead.name) {
+function fallbackReply(lead, lastUserText = '', messages = []) {
+  const last = normalizeForMatch(lastUserText);
+  const context = normalizeForMatch(messages
+    .filter((message) => message.role === 'user')
+    .map((message) => message.content)
+    .join('\n'));
+
+  if (hasAny(last, [/nao.*nome|n.o.*nome|nome correto|corrigindo.*nome|meu nome e|meu nome ./]) && lead.name) {
     return `Perfeito, ${lead.name}. Corrigi aqui.\nAgora me conte um pouco do seu negócio ou do objetivo que você quer alcançar.`;
   }
 
-  if (!OPENAI_API_KEY) {
-    if (lead.name && !lead.business && !lead.service) {
-      return `Prazer, ${lead.name}.\nMe fale um pouco do seu negócio ou do objetivo que você quer alcançar, que eu te ajudo a escolher o melhor caminho.`;
-    }
+  if (hasAny(last, [
+    /strogonoff|estrogonofe|receita|bolo|macarrao|comida|cozinhar/,
+    /futebol|politica|novela|filme|musica|piada/
+  ])) {
+    return 'Olha, meu amigo, eu até poderia tentar te responder, mas para esse tipo de assunto eu recomendo você procurar no ChatGPT. 😄\n\nPor aqui eu consigo te ajudar melhor com site, loja virtual, Google, tráfego pago, automação e atendimento para o seu negócio.';
+  }
 
-    if (lead.name && lead.service && services[lead.service]) {
-      return `${lead.name}, pelo que você explicou, ${services[lead.service]} parece ser o melhor caminho.\nMe conte como está sua estrutura hoje para eu te orientar melhor.`;
-    }
+  if (hasAny(last, [/vender online|vender pela internet|como faco para vender|como vender|loja online|ecommerce|e-commerce/])) {
+    return 'Boa pergunta. Para vender online do jeito certo, primeiro precisamos escolher a estrutura certa para o seu caso.\n\nSe você tem muitos produtos, o melhor caminho costuma ser uma loja virtual.\nSe você vende poucos serviços ou uma oferta principal, uma landing page com WhatsApp pode converter mais rápido.\nDepois disso, entram SEO e tráfego pago para trazer clientes.\n\nMe diga: você vende produtos, serviços ou os dois?';
+  }
 
-    return 'Entendi. Me conte um pouco mais do seu negócio e do que você quer melhorar primeiro.\n\nPode ser: aparecer no Google, vender mais, criar um site, melhorar o atendimento ou automatizar processos.';
+  if (hasAny(last, [/aparecer no google|ranquear|seo|topo do google|busca do google|pesquisa do google/])) {
+    return 'Para aparecer no Google, normalmente trabalhamos em três frentes: uma página bem estruturada, SEO local e conteúdo com as palavras que seus clientes pesquisam.\n\nSe a empresa ainda não tem site forte, começamos pela base. Se já tem site, melhoramos SEO, velocidade, títulos, páginas de serviço e sinais locais.\n\nQual serviço ou produto você quer que as pessoas encontrem no Google?';
+  }
+
+  if (hasAny(last, [/trafego pago|anuncio|anuncios|ads|google ads|meta ads|facebook ads|instagram ads/])) {
+    return 'Tráfego pago funciona melhor quando não é só impulsionar post.\nO ideal é ter uma oferta clara, uma página ou WhatsApp bem preparado, campanha segmentada e acompanhamento para ajustar o que traz cliente de verdade.\n\nVocê já anuncia hoje ou vai começar do zero?';
+  }
+
+  if (hasAny(last, [/atendente|chatbot|robo|agente|responder cliente|qualificar lead|whatsapp/])) {
+    return 'Um agente de atendimento pode responder dúvidas, entender o que o cliente precisa, qualificar o lead e encaminhar para o WhatsApp com contexto.\n\nO ponto principal é ele conhecer bem o seu negócio e não ficar preso em respostas secas.\n\nHoje você recebe mais contatos pelo WhatsApp, Instagram ou pelo site?';
+  }
+
+  if (hasAny(last, [/preco|valor|quanto custa|orcamento|investimento|mensalidade/])) {
+    return 'Consigo te orientar, mas não é correto chutar um valor sem entender o escopo.\n\nO preço muda conforme o tipo de projeto: site, loja virtual, landing page, tráfego, SEO ou agente de atendimento.\n\nMe diga qual solução você está buscando e se precisa de algo simples para começar ou uma estrutura mais completa.';
+  }
+
+  if (hasAny(last, [/quais servicos|o que voces fazem|servicos|solucoes|propagacao digital/])) {
+    return 'A Propagação Digital ajuda empresas a venderem melhor na internet.\n\nFazemos criação de sites, lojas virtuais, landing pages, SEO para Google, tráfego pago, automações com IA, agentes de atendimento, vídeos e artes.\n\nMe diga seu objetivo principal agora: ser encontrado, vender mais, automatizar atendimento ou melhorar sua presença online?';
+  }
+
+  if (hasAny(last, [/obrigado|obrigada|valeu|beleza|ok|certo/])) {
+    return 'Perfeito. Quando quiser, me diga qual é o seu negócio e o que você quer melhorar primeiro.\nAí eu te indico o caminho mais adequado.';
   }
 
   if (lead.service && services[lead.service]) {
-    return `Pelo que você explicou, o caminho mais indicado parece ser ${services[lead.service]}.\n\nMe fale rapidamente como está sua estrutura hoje para eu te orientar com mais precisão.`;
+    const greeting = lead.name ? `${lead.name}, pelo que você explicou` : 'Pelo que você explicou';
+    return `${greeting}, ${services[lead.service]} parece ser um bom caminho.\n\nPara eu te orientar melhor, me diga: você quer começar rápido com uma solução mais simples ou montar uma estrutura mais completa para vender todos os dias?`;
   }
 
-  return 'Entendi. Me conte um pouco mais do seu negócio e do objetivo principal agora: aparecer no Google, vender mais, criar um site, automatizar atendimento ou melhorar campanhas?';
+  if (lead.name && !lead.business) {
+    return `Prazer, ${lead.name}.\nMe fale um pouco do seu negócio ou do objetivo que você quer alcançar, que eu te ajudo a escolher o melhor caminho.`;
+  }
+
+  if (context.includes('vender') || context.includes('cliente') || context.includes('online')) {
+    return 'Entendi o caminho: você quer transformar presença online em cliente.\n\nPara isso, normalmente precisamos alinhar oferta, página, atendimento no WhatsApp e tráfego ou SEO.\n\nMe diga o que você vende e para qual cidade ou região quer atender.';
+  }
+
+  return 'Entendi. Para eu te responder melhor, me diga em uma frase qual é o seu negócio e qual resultado você quer agora.\n\nExemplo: “tenho uma loja de roupas e quero vender pelo WhatsApp” ou “sou prestador de serviço e quero aparecer no Google”.';
 }
 
 module.exports = async function handler(req, res) {
@@ -268,7 +315,7 @@ module.exports = async function handler(req, res) {
     }
 
     return sendJson(res, 200, {
-      reply: reply || fallbackReply(lead, messages[messages.length - 1]?.content || ''),
+      reply: reply || fallbackReply(lead, messages[messages.length - 1]?.content || '', messages),
       lead
     });
   } catch (error) {
