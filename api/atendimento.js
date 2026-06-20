@@ -254,7 +254,10 @@ async function callGemini(messages, lead, page, path) {
       generationConfig: {
         temperature: 0.72,
         topP: 0.9,
-        maxOutputTokens: 420
+        maxOutputTokens: 2048,
+        thinkingConfig: {
+          thinkingBudget: 0
+        }
       }
     })
   });
