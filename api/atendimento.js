@@ -1,5 +1,7 @@
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const MODEL = process.env.OPENAI_MODEL || 'gpt-5-mini';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 
 const rateLimit = new Map();
 
@@ -218,6 +220,53 @@ async function callOpenAI(messages, lead, page, path) {
   return extractText(data);
 }
 
+function toGeminiContents(messages) {
+  return messages.map((message) => ({
+    role: message.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: message.content }]
+  }));
+}
+
+function extractGeminiText(data) {
+  const parts = [];
+
+  for (const candidate of data.candidates || []) {
+    for (const part of candidate.content?.parts || []) {
+      if (part.text) parts.push(part.text);
+    }
+  }
+
+  return parts.join('\n').trim();
+}
+
+async function callGemini(messages, lead, page, path) {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      systemInstruction: {
+        parts: [{ text: buildInstructions(lead, page, path) }]
+      },
+      contents: toGeminiContents(messages),
+      generationConfig: {
+        temperature: 0.72,
+        topP: 0.9,
+        maxOutputTokens: 420
+      }
+    })
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error?.message || 'Falha na Gemini API');
+  }
+
+  return extractGeminiText(data);
+}
+
 function fallbackReply(lead, lastUserText = '', messages = []) {
   const last = normalizeForMatch(lastUserText);
   const context = normalizeForMatch(messages
@@ -306,7 +355,15 @@ module.exports = async function handler(req, res) {
     nextLead = lead;
     let reply = '';
 
-    if (OPENAI_API_KEY) {
+    if (GEMINI_API_KEY) {
+      try {
+        reply = await callGemini(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
+      } catch (error) {
+        console.error('[pd-atendimento-gemini]', error.message);
+      }
+    }
+
+    if (!reply && OPENAI_API_KEY) {
       try {
         reply = await callOpenAI(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
       } catch (error) {
