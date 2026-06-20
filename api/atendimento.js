@@ -107,9 +107,12 @@ function buildMemorySummary(lead, messages) {
   if (lead.name) facts.push(`Nome: ${lead.name}`);
   if (lead.business) facts.push(`Negócio informado: ${lead.business}`);
   if (lead.goal) facts.push(`Objetivo informado: ${lead.goal}`);
+  if (lead.salesGoal) facts.push(`Meta comercial já citada: ${lead.salesGoal}`);
   if (lead.service && services[lead.service]) facts.push(`Serviço provável: ${services[lead.service]}`);
   if (lead.channel) facts.push(`Canal já citado: ${lead.channel}`);
   if (lead.stage) facts.push(`Estágio já citado: ${lead.stage}`);
+  if (lead.delivery) facts.push(`Entrega/delivery já citado: ${lead.delivery}`);
+  if (lead.peakPeriod) facts.push(`Horário de maior venda já citado: ${lead.peakPeriod}`);
   if (lead.urgency) facts.push(`Urgência já citada: ${lead.urgency}`);
   if (lead.budget) facts.push(`Investimento/valor já citado: ${lead.budget}`);
 
@@ -128,8 +131,12 @@ function updateLead(lead, messages) {
     .filter((message) => message.role === 'user')
     .map((message) => message.content)
     .join('\n');
+  const fullConversationText = messages
+    .map((message) => message.content)
+    .join('\n');
   const normalizedAll = normalizeForMatch(allUserText);
   const normalizedLast = normalizeForMatch(lastUser);
+  const normalizedConversation = normalizeForMatch(fullConversationText);
 
   const namePatterns = [
     /(?:n(?:ão|ao|\?) .*?nome.*?(?:é|e|\?)|meu nome n(?:ão|ao|\?) .*?(?:é|e|\?).*?meu nome (?:é|e|\?)|nome correto (?:é|e|\?)|corrigindo.*?nome.*?(?:é|e|\?))\s+([A-Za-zÀ-ÿ'-]{2,})/i,
@@ -195,6 +202,20 @@ function updateLead(lead, messages) {
   if (hasAny(normalizedAll, [/ifood|i food/])) next.channel = next.channel ? `${next.channel} e iFood` : 'iFood';
   if (hasAny(normalizedAll, [/comecar do zero|começar do zero|ainda vou comecar|ainda vou começar/])) next.stage = 'começando do zero';
   if (hasAny(normalizedAll, [/ja vendo|já vendo|ja recebe|já recebe|ja tenho|já tenho|vendo pelo|recebo pelo/])) next.stage = 'já vende/recebe pedidos';
+  if (hasAny(normalizedConversation, [/voce ja recebe pedidos pelo whatsapp|ja recebe pedidos pelo whatsapp|vende pelo whatsapp|pedidos pelo whatsapp/]) && hasAny(normalizedLast, [/^sim\b|^recebo\b|recebo|vendo|ja|claro/])) {
+    next.channel = 'WhatsApp';
+    next.stage = 'já vende/recebe pedidos';
+  }
+  if (hasAny(normalizedConversation, [/voce ja recebe pedidos pelo whatsapp|ja recebe pedidos pelo whatsapp|vende pelo whatsapp|pedidos pelo whatsapp/]) && hasAny(normalizedAll, [/\brecebo\b/, /\bsim\b/, /ja vendo/, /vendo pelo/])) {
+    next.channel = 'WhatsApp';
+    next.stage = 'já vende/recebe pedidos';
+  }
+  if (hasAny(normalizedAll, [/entregador|moto|motoboy|motoqueiro|entrega|delivery/])) next.delivery = 'quer usar entregador/motoboy';
+  if (hasAny(normalizedAll, [/atrair mais cliente|atrair mais clinete|atrair mais clientes|mais cliente|mais clinete|mais clientes|cliente no bairro|clinete no bairro|clientes no bairro/])) next.salesGoal = 'atrair mais clientes no bairro';
+  if (hasAny(normalizedLast, [/manha|pala manha|pela manha|de manha|cedo/])) next.peakPeriod = 'manhã';
+  else if (hasAny(normalizedLast, [/tarde/])) next.peakPeriod = 'tarde';
+  else if (hasAny(normalizedLast, [/noite|noturno/])) next.peakPeriod = 'noite';
+  else if (hasAny(normalizedLast, [/dia todo|todo dia|o dia inteiro/])) next.peakPeriod = 'dia todo';
 
   if (next.name && (next.business || next.goal || next.service)) next.ready = true;
   return next;
@@ -245,9 +266,12 @@ Tom:
 Estado atual do lead:
 Nome: ${lead.name || 'não informado'}
 Negócio/objetivo: ${lead.business || lead.goal || 'não informado'}
+Meta comercial já citada: ${lead.salesGoal || 'não informada'}
 Serviço provável: ${lead.service ? services[lead.service] : 'não definido'}
 Canal de venda já citado: ${lead.channel || 'não informado'}
 Estágio já citado: ${lead.stage || 'não informado'}
+Entrega/delivery já citado: ${lead.delivery || 'não informado'}
+Horário de venda já citado: ${lead.peakPeriod || 'não informado'}
 Urgência: ${lead.urgency || 'não informada'}
 Investimento/valor citado: ${lead.budget || 'não informado'}
 Página atual: ${page || path || 'site'}
@@ -388,6 +412,10 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
   }
 
   if ((lead.channel || lead.stage) && (context.includes('vender') || context.includes('online') || context.includes('acai') || context.includes('bairro'))) {
+    if (lead.peakPeriod) {
+      return `Perfeito, então vamos usar isso a favor da campanha.\n\nComo você vende mais pela ${lead.peakPeriod}, dá para concentrar os anúncios antes e durante esse horário.\n\nA estrutura ficaria assim:\n1. cardápio/página de pedidos no WhatsApp;\n2. combos de açaí com fotos boas;\n3. anúncios no bairro no horário certo;\n4. rota organizada para o entregador de moto.\n\nVocê já tem fotos boas dos seus açaís ou ainda precisa produzir esse material?`;
+    }
+
     return 'Perfeito, então já temos um ponto importante:\nvocê já usa WhatsApp para vender ou receber pedidos.\n\nO próximo passo é organizar isso para vender mais todos os dias:\n1. cardápio/página de pedidos;\n2. oferta e combos claros;\n3. anúncios no bairro;\n4. Google local para quem procura perto de você.\n\nVocê quer começar com uma estrutura simples e rápida ou com algo mais completo?';
   }
 
