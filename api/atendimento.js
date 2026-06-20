@@ -197,6 +197,9 @@ Serviços da Propagação Digital:
 Tom:
 - Amigável, profissional, claro e direto.
 - Use frases curtas e quebras de linha quando ajudar a leitura.
+- Nunca envie blocos grandes de texto. Quebre a resposta em partes pequenas, como conversa de WhatsApp.
+- Prefira 1 ideia por linha ou por parágrafo curto.
+- Quando explicar uma solução com vários elementos, separe por linhas: página/cardápio, tráfego pago, SEO local, WhatsApp.
 - Pode usar um emoji leve ocasionalmente, sem exagero.
 - Não invente preço fechado. Explique que depende do escopo e colete contexto.
 - Não diga que é IA, modelo, API ou sistema.
@@ -251,7 +254,7 @@ async function callOpenAI(messages, lead, page, path) {
     throw new Error(data.error?.message || 'Falha na IA');
   }
 
-  return extractText(data);
+  return formatForChatReadability(extractText(data));
 }
 
 function toGeminiContents(messages) {
@@ -271,6 +274,17 @@ function extractGeminiText(data) {
   }
 
   return parts.join('\n').trim();
+}
+
+function formatForChatReadability(text) {
+  return String(text || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/(?<!\d)([.!?])\s+(?=[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ])/g, '$1\n\n')
+    .replace(/:\s+(?=\S)/g, ':\n')
+    .replace(/,\s+(nós|eu|você|para você|combinad[ao]s?|junto com|e \*\*SEO|e SEO|quando alguém|para que)/gi, ',\n$1')
+    .replace(/\s+(Combinada com|Combinado com)\s+/g, '\n$1 ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 async function callGemini(messages, lead, page, path) {
@@ -301,7 +315,7 @@ async function callGemini(messages, lead, page, path) {
     throw new Error(data.error?.message || 'Falha na Gemini API');
   }
 
-  return extractGeminiText(data);
+  return formatForChatReadability(extractGeminiText(data));
 }
 
 function fallbackReply(lead, lastUserText = '', messages = []) {
@@ -413,8 +427,10 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    const finalReply = formatForChatReadability(reply || fallbackReply(lead, messages[messages.length - 1]?.content || '', messages));
+
     return sendJson(res, 200, {
-      reply: reply || fallbackReply(lead, messages[messages.length - 1]?.content || '', messages),
+      reply: finalReply,
       lead
     });
   } catch (error) {

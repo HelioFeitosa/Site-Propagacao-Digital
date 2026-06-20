@@ -4,6 +4,7 @@
   const WHATSAPP_NUMBER = '5591987137397';
   const STORAGE_KEY = 'pd-assistente-helio-v2';
   const API_ENDPOINT = '/api/atendimento';
+  const TYPING_APPEAR_DELAY_MS = 3000;
   const RESPONSE_DELAY_MS = 10000;
 
   const services = {
@@ -272,21 +273,24 @@
     addMessageToDom(content, 'user');
     saveConversation();
 
-    const typing = addTyping();
+    let typing = null;
 
     try {
-      const [resultStatus] = await Promise.allSettled([askHelio(), wait(RESPONSE_DELAY_MS)]);
+      const resultPromise = askHelio();
+      await wait(TYPING_APPEAR_DELAY_MS);
+      typing = addTyping();
+      const [resultStatus] = await Promise.allSettled([resultPromise, wait(RESPONSE_DELAY_MS)]);
       if (resultStatus.status === 'rejected') throw resultStatus.reason;
       const result = resultStatus.value;
       if (result.lead) lead = { ...lead, ...result.lead };
       const reply = result.reply || fallbackReply(content);
       chatMessages.push({ role: 'assistant', content: reply });
-      typing.remove();
+      if (typing) typing.remove();
       addMessageToDom(reply, 'bot');
     } catch {
       const reply = fallbackReply(content);
       chatMessages.push({ role: 'assistant', content: reply });
-      typing.remove();
+      if (typing) typing.remove();
       addMessageToDom(reply, 'bot');
     } finally {
       saveConversation();
