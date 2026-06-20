@@ -102,11 +102,23 @@ function hasAny(text, patterns) {
   return patterns.some((pattern) => pattern.test(text));
 }
 
+function extractMoneyValue(text) {
+  const value = cleanText(text, 80);
+  const direct = value.match(/^(?:r\$\s*)?(\d{1,5})(?:[,.](\d{2}))?$/i);
+  if (direct) return `R$ ${direct[1]},${direct[2] || '00'}`;
+
+  const inline = value.match(/(?:r\$\s*)?(\d{1,5})(?:[,.](\d{2}))?\s*(?:reais|real|o litro|por litro|litro)?/i);
+  if (inline && /pre[cç]o|valor|custa|reais|real|r\$|litro/i.test(value)) return `R$ ${inline[1]},${inline[2] || '00'}`;
+
+  return '';
+}
+
 function buildMemorySummary(lead, messages) {
   const facts = [];
   if (lead.name) facts.push(`Nome: ${lead.name}`);
   if (lead.business) facts.push(`Negócio informado: ${lead.business}`);
   if (lead.productDetail) facts.push(`Produto/detalhe já citado: ${lead.productDetail}`);
+  if (lead.productPrice) facts.push(`Preço do produto já citado: ${lead.productPrice}`);
   if (lead.goal) facts.push(`Objetivo informado: ${lead.goal}`);
   if (lead.salesGoal) facts.push(`Meta comercial já citada: ${lead.salesGoal}`);
   if (lead.service && services[lead.service]) facts.push(`Serviço provável: ${services[lead.service]}`);
@@ -129,6 +141,7 @@ function buildMemorySummary(lead, messages) {
 function updateLead(lead, messages) {
   const next = { ...(lead || {}) };
   const lastUser = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
+  const lastAssistant = [...messages].reverse().find((message) => message.role === 'assistant')?.content || '';
   const allUserText = messages
     .filter((message) => message.role === 'user')
     .map((message) => message.content)
@@ -138,6 +151,7 @@ function updateLead(lead, messages) {
     .join('\n');
   const normalizedAll = normalizeForMatch(allUserText);
   const normalizedLast = normalizeForMatch(lastUser);
+  const normalizedLastAssistant = normalizeForMatch(lastAssistant);
   const normalizedConversation = normalizeForMatch(fullConversationText);
 
   const namePatterns = [
@@ -208,6 +222,13 @@ function updateLead(lead, messages) {
   if (hasAny(normalizedAll, [/acai.*litro|litro.*acai|açaí.*litro|litro.*açaí|polpa|in natura|caroco|carocos|caroço|caroços/])) {
     next.productDetail = 'açaí em litro, polpa in natura';
     next.business = next.business || 'vende açaí em litro no bairro';
+  }
+
+  const priceWasAsked = hasAny(normalizedLastAssistant, [/preco do litro|preço do litro|qual.*preco|qual.*preço|valor do litro/]) ||
+    hasAny(normalizedConversation, [/preco do litro|preço do litro|valor do litro/]);
+  const productPrice = extractMoneyValue(lastUser);
+  if (productPrice && (next.productDetail || priceWasAsked)) {
+    next.productPrice = productPrice;
   }
 
   if (hasAny(normalizedAll, [/whatsapp|zap|zapi/])) next.channel = 'WhatsApp';
@@ -286,6 +307,7 @@ Estado atual do lead:
 Nome: ${lead.name || 'não informado'}
 Negócio/objetivo: ${lead.business || lead.goal || 'não informado'}
 Produto/detalhe já citado: ${lead.productDetail || 'não informado'}
+Preço do produto já citado: ${lead.productPrice || 'não informado'}
 Meta comercial já citada: ${lead.salesGoal || 'não informada'}
 Serviço provável: ${lead.service ? services[lead.service] : 'não definido'}
 Canal de venda já citado: ${lead.channel || 'não informado'}
@@ -429,7 +451,16 @@ function priorityReply(lead, lastUserText = '', messages = []) {
 
   if (mentionsAcaiLiter) {
     const name = lead.name ? `${lead.name}, ` : '';
+    if (lead.productPrice) {
+      return `${name}agora fechou.\n\nProduto:\naçaí em litro,\npolpa in natura.\n\nPreço:\n${lead.productPrice} o litro.\n\nCom isso, eu já montaria a oferta assim:\n**Açaí in natura por litro no seu bairro**\n\nPedido direto pelo WhatsApp,\ncom retirada ou entrega combinada.\n\nAgora preciso só de uma coisa para deixar a campanha mais certeira:\nvocê entrega em quais bairros?`;
+    }
+
     return `${name}você tem razão.\n\nAgora ficou claro:\nnão é açaí no copo com tamanhos e adicionais.\n\nÉ açaí em litro,\npolpa in natura,\nfeito a partir do caroço do açaí.\n\nEntão o caminho correto é outro:\n1. página simples mostrando o litro da polpa;\n2. fotos reais do produto, embalagem e preparo;\n3. botão direto para pedido no WhatsApp;\n4. anúncio no bairro para quem compra açaí para casa, família ou revenda.\n\nPara montar a oferta certa,\nqual é o preço do litro hoje?`;
+  }
+
+  if (lead.productDetail && lead.productPrice && hasAny(last, [/^(?:r\$\s*)?\d{1,5}(?:[,.]\d{2})?$/, /reais|real|o litro|por litro/])) {
+    const name = lead.name ? `${lead.name}, ` : '';
+    return `${name}perfeito.\n\nPreço anotado:\n${lead.productPrice} o litro.\n\nAgora a oferta já começa a ficar clara:\naçaí em litro,\npolpa in natura,\npedido direto pelo WhatsApp.\n\nPara segmentar bem os anúncios,\nvocê entrega em quais bairros?`;
   }
 
   return '';
@@ -460,6 +491,10 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
   if (hasAny(last, [/acai|delivery|cardapio|bairro|bairo|comida|lanchonete|restaurante/])) {
     if (lead.productDetail) {
       const name = lead.name ? `${lead.name}, ` : '';
+      if (lead.productPrice) {
+        return `${name}perfeito.\n\nJá tenho o produto e o preço:\naçaí em litro,\npolpa in natura,\n${lead.productPrice} o litro.\n\nAgora precisamos definir a área de entrega.\n\nVocê entrega em quais bairros?`;
+      }
+
       return `${name}entendi.\n\nO produto é açaí em litro,\npolpa in natura.\n\nNesse caso, a página precisa vender a confiança do produto:\norigem, preparo, embalagem, retirada/entrega e pedido pelo WhatsApp.\n\nQual é o preço do litro hoje?`;
     }
 
@@ -479,6 +514,10 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
     if (lead.planPreference) {
       if (lead.productDetail) {
         const name = lead.name ? `${lead.name}, ` : '';
+        if (lead.productPrice) {
+          return `${name}perfeito.\n\nJá entendi:\naçaí em litro,\npolpa in natura,\n${lead.productPrice} o litro.\n\nVamos manter a estrutura simples para vender rápido:\n1. página com a oferta do litro;\n2. fotos reais da polpa e da embalagem;\n3. botão direto para pedido no WhatsApp;\n4. anúncio local no bairro.\n\nPara anunciar do jeito certo,\nvocê entrega em quais bairros?`;
+        }
+
         return `${name}perfeito.\n\nJá entendi o produto:\naçaí em litro,\npolpa in natura.\n\nVamos manter a estrutura simples para vender rápido:\n1. página com a oferta do litro;\n2. fotos reais da polpa e da embalagem;\n3. botão direto para pedido no WhatsApp;\n4. anúncio local no bairro.\n\nPara fechar a oferta,\nqual é o preço do litro hoje?`;
       }
 
