@@ -102,6 +102,25 @@ function hasAny(text, patterns) {
   return patterns.some((pattern) => pattern.test(text));
 }
 
+function buildMemorySummary(lead, messages) {
+  const facts = [];
+  if (lead.name) facts.push(`Nome: ${lead.name}`);
+  if (lead.business) facts.push(`Negócio informado: ${lead.business}`);
+  if (lead.goal) facts.push(`Objetivo informado: ${lead.goal}`);
+  if (lead.service && services[lead.service]) facts.push(`Serviço provável: ${services[lead.service]}`);
+  if (lead.channel) facts.push(`Canal já citado: ${lead.channel}`);
+  if (lead.stage) facts.push(`Estágio já citado: ${lead.stage}`);
+  if (lead.urgency) facts.push(`Urgência já citada: ${lead.urgency}`);
+  if (lead.budget) facts.push(`Investimento/valor já citado: ${lead.budget}`);
+
+  const recentUserFacts = messages
+    .filter((message) => message.role === 'user')
+    .slice(-6)
+    .map((message) => `Cliente disse: ${cleanText(message.content, 180)}`);
+
+  return [...facts, ...recentUserFacts].join('\n') || 'Nenhum dado consolidado ainda.';
+}
+
 function updateLead(lead, messages) {
   const next = { ...(lead || {}) };
   const lastUser = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
@@ -153,21 +172,37 @@ function updateLead(lead, messages) {
   const budgetMatch = allUserText.match(/(?:r\$\s?\d[\d.,]*|até\s?r?\$?\s?\d[\d.,]*|orçamento.*|orcamento.*|investir.*|valor.*|preço.*|preco.*)/i);
   if (budgetMatch) next.budget = cleanText(budgetMatch[0], 120);
 
-  const businessCandidate = messages
+  const userMessages = messages
     .filter((message) => message.role === 'user')
-    .map((message) => message.content)
-    .find((text) => text.length > 14 && /(negócio|negocio|empresa|loja|clínica|clinica|serviço|servico|vendo|trabalho|objetivo|quero|preciso|açaí|acai|bairro|delivery|produto)/i.test(text));
+    .map((message) => message.content);
+
+  const productBusinessCandidate = [...userMessages]
+    .reverse()
+    .find((text) => text.length > 8 && /(açaí|acai|bairro|bairo|delivery|produto|comida|lanchonete|restaurante|loja)/i.test(text));
+
+  const businessCandidate = productBusinessCandidate || [...userMessages]
+    .reverse()
+    .find((text) => text.length > 14 && /(negócio|negocio|empresa|clínica|clinica|serviço|servico|trabalho|objetivo|quero|preciso)/i.test(text));
+
   if (businessCandidate) next.business = cleanText(businessCandidate, 180);
 
   if (hasAny(normalizedLast, [/acai|bairro|bairo|delivery|produto|servico/])) {
     next.business = cleanText(lastUser, 180);
   }
 
+  if (hasAny(normalizedAll, [/whatsapp|zap|zapi/])) next.channel = 'WhatsApp';
+  if (hasAny(normalizedAll, [/instagram|insta/])) next.channel = next.channel ? `${next.channel} e Instagram` : 'Instagram';
+  if (hasAny(normalizedAll, [/ifood|i food/])) next.channel = next.channel ? `${next.channel} e iFood` : 'iFood';
+  if (hasAny(normalizedAll, [/comecar do zero|começar do zero|ainda vou comecar|ainda vou começar/])) next.stage = 'começando do zero';
+  if (hasAny(normalizedAll, [/ja vendo|já vendo|ja recebe|já recebe|ja tenho|já tenho|vendo pelo|recebo pelo/])) next.stage = 'já vende/recebe pedidos';
+
   if (next.name && (next.business || next.goal || next.service)) next.ready = true;
   return next;
 }
 
-function buildInstructions(lead, page, path) {
+function buildInstructions(lead, page, path, messages = []) {
+  const memorySummary = buildMemorySummary(lead, messages);
+
   return `
 Você é Hélio, consultor da Propagação Digital.
 Você conversa em português do Brasil com clientes que chegam pelo site.
@@ -179,6 +214,9 @@ Objetivo:
 - Não presuma o serviço só porque a pessoa está em uma página específica. Use a página apenas como contexto fraco.
 - Se o cliente perguntar "de onde você tirou isso?", "não foi isso" ou corrigir uma suposição, peça desculpas, abandone a suposição anterior e siga pelo que o cliente disser depois.
 - Se o cliente disser que quer vender online, vender todo dia, vender no bairro, vender açaí, comida, produtos ou delivery, priorize uma estrutura de venda online/local: loja virtual simples, cardápio/página de pedidos, WhatsApp, tráfego pago e SEO local. Não recomende Automação com IA como primeira solução nesses casos.
+- Antes de fazer uma pergunta, leia a memória consolidada e o histórico. Nunca pergunte de novo algo que o cliente já respondeu.
+- Se uma informação já foi dada, use essa informação e avance para a próxima etapa lógica.
+- Faça no máximo uma pergunta por resposta.
 - Se o cliente perguntar algo fora do assunto, responda com educação e traga a conversa de volta para o negócio.
 - Exemplo fora do assunto: se pedir receita de strogonoff, diga que até poderia ajudar, mas recomenda procurar isso no ChatGPT, e volte para site, Google, vendas, automação ou atendimento.
 - Corrigir informações quando o cliente corrigir. Exemplo: se disser "não, meu nome é Junior", aceite Junior.
@@ -208,9 +246,14 @@ Estado atual do lead:
 Nome: ${lead.name || 'não informado'}
 Negócio/objetivo: ${lead.business || lead.goal || 'não informado'}
 Serviço provável: ${lead.service ? services[lead.service] : 'não definido'}
+Canal de venda já citado: ${lead.channel || 'não informado'}
+Estágio já citado: ${lead.stage || 'não informado'}
 Urgência: ${lead.urgency || 'não informada'}
 Investimento/valor citado: ${lead.budget || 'não informado'}
 Página atual: ${page || path || 'site'}
+
+Memória consolidada da conversa:
+${memorySummary}
 
 Responda apenas a próxima mensagem do Hélio, em texto natural. Não use JSON.
 `.trim();
@@ -239,7 +282,7 @@ async function callOpenAI(messages, lead, page, path) {
     },
     body: JSON.stringify({
       model: MODEL,
-      instructions: buildInstructions(lead, page, path),
+      instructions: buildInstructions(lead, page, path, messages),
       input: messages.map((message) => ({
         role: message.role === 'assistant' ? 'assistant' : 'user',
         content: message.content
@@ -296,7 +339,7 @@ async function callGemini(messages, lead, page, path) {
     },
     body: JSON.stringify({
       systemInstruction: {
-        parts: [{ text: buildInstructions(lead, page, path) }]
+        parts: [{ text: buildInstructions(lead, page, path, messages) }]
       },
       contents: toGeminiContents(messages),
       generationConfig: {
@@ -338,7 +381,14 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
 
   if (hasAny(last, [/acai|delivery|cardapio|bairro|bairo|comida|lanchonete|restaurante/])) {
     const name = lead.name ? `${lead.name}, agora entendi melhor` : 'Agora entendi melhor';
-    return `${name}: você quer vender açaí para pessoas do seu bairro.\n\nNesse caso, eu começaria com uma estrutura simples e direta:\n1. Cardápio/página de pedidos pelo WhatsApp.\n2. Fotos boas dos produtos e combos.\n3. Google/SEO local para aparecer para quem procura açaí perto de você.\n4. Tráfego pago leve no bairro para trazer pedidos todos os dias.\n\nVocê já recebe pedidos pelo WhatsApp hoje ou ainda vai começar do zero?`;
+    const nextQuestion = lead.channel
+      ? 'Você quer que essa estrutura seja mais simples para começar rápido ou mais completa para escalar os pedidos?'
+      : 'Você já recebe pedidos pelo WhatsApp hoje ou ainda vai começar do zero?';
+    return `${name}: você quer vender açaí para pessoas do seu bairro.\n\nNesse caso, eu começaria com uma estrutura simples e direta:\n1. Cardápio/página de pedidos pelo WhatsApp.\n2. Fotos boas dos produtos e combos.\n3. Google/SEO local para aparecer para quem procura açaí perto de você.\n4. Tráfego pago leve no bairro para trazer pedidos todos os dias.\n\n${nextQuestion}`;
+  }
+
+  if ((lead.channel || lead.stage) && (context.includes('vender') || context.includes('online') || context.includes('acai') || context.includes('bairro'))) {
+    return 'Perfeito, então já temos um ponto importante:\nvocê já usa WhatsApp para vender ou receber pedidos.\n\nO próximo passo é organizar isso para vender mais todos os dias:\n1. cardápio/página de pedidos;\n2. oferta e combos claros;\n3. anúncios no bairro;\n4. Google local para quem procura perto de você.\n\nVocê quer começar com uma estrutura simples e rápida ou com algo mais completo?';
   }
 
   if (hasAny(last, [/vender online|verder online|vender pela internet|vender todo dia|vender todos os dias|como faco para vender|como vender|loja online|ecommerce|e-commerce/])) {
