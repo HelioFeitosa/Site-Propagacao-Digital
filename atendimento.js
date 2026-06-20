@@ -316,16 +316,17 @@
   }
 
   function cleanName(name) {
-    const ignored = ['ola', 'olá', 'oi', 'opa', 'bom', 'boa', 'meu', 'nome', 'sou'];
-    return String(name || '')
+    const ignored = ['ola', 'olá', 'oi', 'opa', 'bom', 'boa', 'meu', 'nome', 'sou', 'eu', 'a', 'o'];
+    const cleaned = String(name || '')
       .split(/\s+/)
       .map((part) => part.replace(/[^A-Za-zÀ-ÿ'-]/g, ''))
       .find((part) => part.length > 1 && !ignored.includes(part.toLowerCase())) || '';
+    return cleaned ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase() : '';
   }
 
   function updateLeadLocally(text) {
     const lower = text.toLowerCase();
-    const nameMatch = text.match(/(?:meu nome (?:é|e|\?)|me chamo|sou|aqui (?:é|e|\?)|nome (?:é|e|\?))\s+([A-Za-zÀ-ÿ'-]{2,})/i);
+    const nameMatch = text.match(/(?:meu nome (?:é|e|\?)|me chamo|eu sou|sou|aqui (?:é|e|\?)|nome (?:é|e|\?))\s+(?:a|o)?\s*([A-Za-zÀ-ÿ'-]{2,})/i);
     const correctionMatch = text.match(/(?:n(?:ão|ao|\?) .*?nome.*?(?:é|e|\?)|meu nome n(?:ão|ao|\?) .*?(?:é|e|\?).*?meu nome (?:é|e|\?)|nome correto (?:é|e|\?))\s+([A-Za-zÀ-ÿ'-]{2,})/i);
     const extractedName = cleanName((correctionMatch || nameMatch || [])[1]);
 
@@ -333,7 +334,7 @@
 
     const serviceSignals = [
       ['agentes', /(atendente|atendimento|chatbot|chat|responder cliente|qualificar lead)/],
-      ['automacao', /(automat|ia|inteligência artificial|processo repetitivo)/],
+      ['automacao', /(automat|\bia\b|inteligência artificial|processo repetitivo)/],
       ['trafego', /(tráfego|trafego|anúncio|anuncio|ads|google ads|meta ads|facebook|instagram)/],
       ['seo', /(seo|google|busca|pesquisa|ranquear|aparecer)/],
       ['lojas', /(loja virtual|ecommerce|e-commerce|catálogo|catalogo|produto|vender online)/],

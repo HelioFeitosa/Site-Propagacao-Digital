@@ -18,7 +18,7 @@ const services = {
 
 const serviceSignals = [
   ['agentes', /(atendente|atendimento|chatbot|chat|responder cliente|qualificar lead|whatsapp)/i],
-  ['automacao', /(automat|ia|inteligência artificial|processo repetitivo|sistema)/i],
+  ['automacao', /(automat|\bia\b|inteligência artificial|processo repetitivo|sistema)/i],
   ['trafego', /(tráfego|trafego|anúncio|anuncio|ads|google ads|meta ads|facebook|instagram|campanha)/i],
   ['seo', /(seo|google|busca|pesquisa|ranquear|aparecer|topo)/i],
   ['lojas', /(loja virtual|ecommerce|e-commerce|catálogo|catalogo|produto|vender online|pagamento|frete)/i],
@@ -90,11 +90,12 @@ function normalizeForMatch(value) {
 }
 
 function cleanName(value) {
-  const ignored = new Set(['ola', 'olá', 'oi', 'opa', 'bom', 'boa', 'meu', 'nome', 'sou', 'eu']);
-  return cleanText(value, 80)
+  const ignored = new Set(['ola', 'olá', 'oi', 'opa', 'bom', 'boa', 'meu', 'nome', 'sou', 'eu', 'a', 'o']);
+  const name = cleanText(value, 80)
     .split(/\s+/)
     .map((part) => part.replace(/[^A-Za-zÀ-ÿ'-]/g, ''))
     .find((part) => part.length > 1 && !ignored.has(part.toLowerCase())) || '';
+  return name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : '';
 }
 
 function hasAny(text, patterns) {
@@ -108,19 +109,45 @@ function updateLead(lead, messages) {
     .filter((message) => message.role === 'user')
     .map((message) => message.content)
     .join('\n');
+  const normalizedAll = normalizeForMatch(allUserText);
+  const normalizedLast = normalizeForMatch(lastUser);
 
   const namePatterns = [
     /(?:n(?:ão|ao|\?) .*?nome.*?(?:é|e|\?)|meu nome n(?:ão|ao|\?) .*?(?:é|e|\?).*?meu nome (?:é|e|\?)|nome correto (?:é|e|\?)|corrigindo.*?nome.*?(?:é|e|\?))\s+([A-Za-zÀ-ÿ'-]{2,})/i,
-    /(?:meu nome (?:é|e|\?)|me chamo|sou|aqui (?:é|e|\?)|nome (?:é|e|\?))\s+([A-Za-zÀ-ÿ'-]{2,})/i,
+    /(?:meu nome (?:é|e|\?)|me chamo|eu sou|sou|aqui (?:é|e|\?)|nome (?:é|e|\?))\s+(?:a|o)?\s*([A-Za-zÀ-ÿ'-]{2,})/i,
     /(?:olá|ola|oi|opa),?\s*(?:meu nome é|me chamo|sou)?\s*([A-Za-zÀ-ÿ'-]{2,})/i
   ];
   const extractedName = cleanName((namePatterns.map((pattern) => lastUser.match(pattern)).find(Boolean) || [])[1]);
   if (extractedName) next.name = extractedName;
 
-  const foundService = serviceSignals.find(([, pattern]) => pattern.test(allUserText));
+  if (hasAny(normalizedLast, [/de onde.*tirou/, /nao.*foi.*isso/, /nao.*e.*isso/, /nao.*quero.*isso/])) {
+    delete next.service;
+    delete next.goal;
+  }
+
+  const salesIntent = hasAny(normalizedAll, [
+    /vender online/,
+    /verder online/,
+    /vender pela internet/,
+    /vender todo dia/,
+    /vender todos os dias/,
+    /loja online/,
+    /delivery/,
+    /ifood/,
+    /cardapio/,
+    /acai/,
+    /acai/,
+    /hamburguer/,
+    /pizza/,
+    /bairro/,
+    /bairo/
+  ]);
+
+  const foundService = salesIntent ? ['lojas'] : serviceSignals.find(([, pattern]) => pattern.test(allUserText));
   if (foundService) next.service = foundService[0];
 
-  if (!next.goal && foundService) next.goal = services[foundService[0]];
+  if (salesIntent) next.goal = 'Vender online todos os dias';
+  else if (!next.goal && foundService) next.goal = services[foundService[0]];
   if (/(urgente|hoje|agora|rápido|rapido|essa semana|quanto antes)/i.test(allUserText)) next.urgency = 'urgente';
 
   const budgetMatch = allUserText.match(/(?:r\$\s?\d[\d.,]*|até\s?r?\$?\s?\d[\d.,]*|orçamento.*|orcamento.*|investir.*|valor.*|preço.*|preco.*)/i);
@@ -129,8 +156,12 @@ function updateLead(lead, messages) {
   const businessCandidate = messages
     .filter((message) => message.role === 'user')
     .map((message) => message.content)
-    .find((text) => text.length > 24 && /(negócio|negocio|empresa|loja|clínica|clinica|serviço|servico|vendo|trabalho|objetivo|quero|preciso)/i.test(text));
+    .find((text) => text.length > 14 && /(negócio|negocio|empresa|loja|clínica|clinica|serviço|servico|vendo|trabalho|objetivo|quero|preciso|açaí|acai|bairro|delivery|produto)/i.test(text));
   if (businessCandidate) next.business = cleanText(businessCandidate, 180);
+
+  if (hasAny(normalizedLast, [/acai|bairro|bairo|delivery|produto|servico/])) {
+    next.business = cleanText(lastUser, 180);
+  }
 
   if (next.name && (next.business || next.goal || next.service)) next.ready = true;
   return next;
@@ -145,6 +176,9 @@ Objetivo:
 - Conversar de forma natural, inteligente e humana, como um bom consultor comercial.
 - Entender nome, negócio, objetivo, urgência e melhor solução.
 - Responder perguntas sobre serviços sem parecer robô de script.
+- Não presuma o serviço só porque a pessoa está em uma página específica. Use a página apenas como contexto fraco.
+- Se o cliente perguntar "de onde você tirou isso?", "não foi isso" ou corrigir uma suposição, peça desculpas, abandone a suposição anterior e siga pelo que o cliente disser depois.
+- Se o cliente disser que quer vender online, vender todo dia, vender no bairro, vender açaí, comida, produtos ou delivery, priorize uma estrutura de venda online/local: loja virtual simples, cardápio/página de pedidos, WhatsApp, tráfego pago e SEO local. Não recomende Automação com IA como primeira solução nesses casos.
 - Se o cliente perguntar algo fora do assunto, responda com educação e traga a conversa de volta para o negócio.
 - Exemplo fora do assunto: se pedir receita de strogonoff, diga que até poderia ajudar, mas recomenda procurar isso no ChatGPT, e volte para site, Google, vendas, automação ou atendimento.
 - Corrigir informações quando o cliente corrigir. Exemplo: se disser "não, meu nome é Junior", aceite Junior.
@@ -288,7 +322,12 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
     return 'Olha, meu amigo, eu até poderia tentar te responder, mas para esse tipo de assunto eu recomendo você procurar no ChatGPT. 😄\n\nPor aqui eu consigo te ajudar melhor com site, loja virtual, Google, tráfego pago, automação e atendimento para o seu negócio.';
   }
 
-  if (hasAny(last, [/vender online|vender pela internet|como faco para vender|como vender|loja online|ecommerce|e-commerce/])) {
+  if (hasAny(last, [/acai|delivery|cardapio|bairro|bairo|comida|lanchonete|restaurante/])) {
+    const name = lead.name ? `${lead.name}, agora entendi melhor` : 'Agora entendi melhor';
+    return `${name}: você quer vender açaí para pessoas do seu bairro.\n\nNesse caso, eu começaria com uma estrutura simples e direta:\n1. Cardápio/página de pedidos pelo WhatsApp.\n2. Fotos boas dos produtos e combos.\n3. Google/SEO local para aparecer para quem procura açaí perto de você.\n4. Tráfego pago leve no bairro para trazer pedidos todos os dias.\n\nVocê já recebe pedidos pelo WhatsApp hoje ou ainda vai começar do zero?`;
+  }
+
+  if (hasAny(last, [/vender online|verder online|vender pela internet|vender todo dia|vender todos os dias|como faco para vender|como vender|loja online|ecommerce|e-commerce/])) {
     return 'Boa pergunta. Para vender online do jeito certo, primeiro precisamos escolher a estrutura certa para o seu caso.\n\nSe você tem muitos produtos, o melhor caminho costuma ser uma loja virtual.\nSe você vende poucos serviços ou uma oferta principal, uma landing page com WhatsApp pode converter mais rápido.\nDepois disso, entram SEO e tráfego pago para trazer clientes.\n\nMe diga: você vende produtos, serviços ou os dois?';
   }
 
@@ -316,6 +355,10 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
     return 'Perfeito. Quando quiser, me diga qual é o seu negócio e o que você quer melhorar primeiro.\nAí eu te indico o caminho mais adequado.';
   }
 
+  if (context.includes('vender') || context.includes('verder') || context.includes('cliente') || context.includes('online') || context.includes('acai') || context.includes('bairro')) {
+    return 'Agora ficou claro: o foco é vender todos os dias para clientes da sua região.\n\nPara um negócio como esse, eu começaria com uma página/cardápio de pedidos bem simples no WhatsApp, oferta clara, fotos boas, SEO local e tráfego pago leve para o bairro.\n\nVocê já vende pelo WhatsApp hoje ou ainda vai começar do zero?';
+  }
+
   if (lead.service && services[lead.service]) {
     const greeting = lead.name ? `${lead.name}, pelo que você explicou` : 'Pelo que você explicou';
     return `${greeting}, ${services[lead.service]} parece ser um bom caminho.\n\nPara eu te orientar melhor, me diga: você quer começar rápido com uma solução mais simples ou montar uma estrutura mais completa para vender todos os dias?`;
@@ -323,10 +366,6 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
 
   if (lead.name && !lead.business) {
     return `Prazer, ${lead.name}.\nMe fale um pouco do seu negócio ou do objetivo que você quer alcançar, que eu te ajudo a escolher o melhor caminho.`;
-  }
-
-  if (context.includes('vender') || context.includes('cliente') || context.includes('online')) {
-    return 'Entendi o caminho: você quer transformar presença online em cliente.\n\nPara isso, normalmente precisamos alinhar oferta, página, atendimento no WhatsApp e tráfego ou SEO.\n\nMe diga o que você vende e para qual cidade ou região quer atender.';
   }
 
   return 'Entendi. Para eu te responder melhor, me diga em uma frase qual é o seu negócio e qual resultado você quer agora.\n\nExemplo: “tenho uma loja de roupas e quero vender pelo WhatsApp” ou “sou prestador de serviço e quero aparecer no Google”.';
