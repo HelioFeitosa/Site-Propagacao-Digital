@@ -111,6 +111,7 @@ function buildMemorySummary(lead, messages) {
   if (lead.service && services[lead.service]) facts.push(`Serviço provável: ${services[lead.service]}`);
   if (lead.channel) facts.push(`Canal já citado: ${lead.channel}`);
   if (lead.stage) facts.push(`Estágio já citado: ${lead.stage}`);
+  if (lead.planPreference) facts.push(`Preferência de estrutura já citada: ${lead.planPreference}`);
   if (lead.delivery) facts.push(`Entrega/delivery já citado: ${lead.delivery}`);
   if (lead.peakPeriod) facts.push(`Horário de maior venda já citado: ${lead.peakPeriod}`);
   if (lead.urgency) facts.push(`Urgência já citada: ${lead.urgency}`);
@@ -212,6 +213,8 @@ function updateLead(lead, messages) {
   }
   if (hasAny(normalizedAll, [/entregador|moto|motoboy|motoqueiro|entrega|delivery/])) next.delivery = 'quer usar entregador/motoboy';
   if (hasAny(normalizedAll, [/atrair mais cliente|atrair mais clinete|atrair mais clientes|mais cliente|mais clinete|mais clientes|cliente no bairro|clinete no bairro|clientes no bairro/])) next.salesGoal = 'atrair mais clientes no bairro';
+  if (hasAny(normalizedAll, [/simples|rapido|rápido|estrutura simples|comecar rapido|começar rápido|vender rapido|vender rápido/])) next.planPreference = 'estrutura simples para começar rápido';
+  if (hasAny(normalizedAll, [/completo|completa|estrutura completa|escalar/])) next.planPreference = 'estrutura mais completa';
   if (hasAny(normalizedLast, [/manha|pala manha|pela manha|de manha|cedo/])) next.peakPeriod = 'manhã';
   else if (hasAny(normalizedLast, [/tarde/])) next.peakPeriod = 'tarde';
   else if (hasAny(normalizedLast, [/noite|noturno/])) next.peakPeriod = 'noite';
@@ -237,6 +240,7 @@ Objetivo:
 - Se o cliente disser que quer vender online, vender todo dia, vender no bairro, vender açaí, comida, produtos ou delivery, priorize uma estrutura de venda online/local: loja virtual simples, cardápio/página de pedidos, WhatsApp, tráfego pago e SEO local. Não recomende Automação com IA como primeira solução nesses casos.
 - Antes de fazer uma pergunta, leia a memória consolidada e o histórico. Nunca pergunte de novo algo que o cliente já respondeu.
 - Se uma informação já foi dada, use essa informação e avance para a próxima etapa lógica.
+- Se o cliente responder "simples", "rápido", "simples pra vender rápido" ou "completo", aceite como resposta sobre o tipo de estrutura e avance para plano/WhatsApp. Não repita a pergunta sobre estrutura simples ou completa.
 - Faça no máximo uma pergunta por resposta.
 - Se o cliente pedir exemplo, foto ou modelo de cardápio/página, mostre um exemplo textual claro e contextualizado. Não volte para perguntas de qualificação já respondidas.
 - Se não puder enviar imagem diretamente no chat, explique como seria o modelo visual e ofereça montar um exemplo para o negócio dele.
@@ -272,6 +276,7 @@ Meta comercial já citada: ${lead.salesGoal || 'não informada'}
 Serviço provável: ${lead.service ? services[lead.service] : 'não definido'}
 Canal de venda já citado: ${lead.channel || 'não informado'}
 Estágio já citado: ${lead.stage || 'não informado'}
+Preferência de estrutura já citada: ${lead.planPreference || 'não informada'}
 Entrega/delivery já citado: ${lead.delivery || 'não informado'}
 Horário de venda já citado: ${lead.peakPeriod || 'não informado'}
 Urgência: ${lead.urgency || 'não informada'}
@@ -418,6 +423,12 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
   }
 
   if ((lead.channel || lead.stage) && (context.includes('vender') || context.includes('online') || context.includes('acai') || context.includes('bairro'))) {
+    if (lead.planPreference) {
+      const periodLine = lead.peakPeriod ? `\nComo você vende mais pela ${lead.peakPeriod}, os anúncios devem começar antes desse horário.` : '';
+      const deliveryLine = lead.delivery ? '\nComo você quer usar entregador/motoboy, o pedido precisa chegar organizado com endereço e forma de pagamento.' : '';
+      return `Perfeito. Vamos pelo caminho simples para vender rápido.${periodLine}${deliveryLine}\n\nEu montaria assim:\n1. cardápio/página simples com seus principais tamanhos e adicionais;\n2. botão direto para pedido no WhatsApp;\n3. fotos boas dos copos e combos;\n4. anúncio local no bairro para gerar pedido rápido.\n\nO próximo passo é definir o cardápio inicial:\nquais tamanhos de açaí você vende hoje?`;
+    }
+
     if (lead.peakPeriod) {
       return `Perfeito, então vamos usar isso a favor da campanha.\n\nComo você vende mais pela ${lead.peakPeriod}, dá para concentrar os anúncios antes e durante esse horário.\n\nA estrutura ficaria assim:\n1. cardápio/página de pedidos no WhatsApp;\n2. combos de açaí com fotos boas;\n3. anúncios no bairro no horário certo;\n4. rota organizada para o entregador de moto.\n\nVocê já tem fotos boas dos seus açaís ou ainda precisa produzir esse material?`;
     }
