@@ -113,12 +113,38 @@ function extractMoneyValue(text) {
   return '';
 }
 
+function extractFoodProduct(text) {
+  const value = cleanText(text, 180);
+  const direct = value.match(/(?:vendo|venda|tenho|trabalho com|faco|faço)\s+(.+?)(?:\s+no meu bairro|\s+no bairro|\s+na minha cidade|!|\.|$)/i);
+  const raw = direct ? direct[1] : '';
+  const product = raw
+    .replace(/\b(mais|online|todo dia|todos os dias|pelo whatsapp|no whatsapp)\b/gi, '')
+    .trim();
+
+  if (product && product.length >= 3) return product;
+  return '';
+}
+
+function productLabel(lead) {
+  return lead.productDetail || lead.product || 'seu produto';
+}
+
 function isNameQuestion(text) {
   return hasAny(normalizeForMatch(text), [
     /qual.*meu nome/,
     /como.*meu nome/,
     /sabe.*meu nome/,
     /lembra.*meu nome/
+  ]);
+}
+
+function isAssistantNameQuestion(text) {
+  return hasAny(normalizeForMatch(text), [
+    /qual.*seu nome/,
+    /como.*seu nome/,
+    /seu nome mesmo/,
+    /quem.*voce/,
+    /quem.*você/
   ]);
 }
 
@@ -147,6 +173,7 @@ function buildMemorySummary(lead, messages) {
   const facts = [];
   if (lead.name) facts.push(`Nome: ${lead.name}`);
   if (lead.business) facts.push(`Negócio informado: ${lead.business}`);
+  if (lead.product) facts.push(`Produto já citado: ${lead.product}`);
   if (lead.productDetail) facts.push(`Produto/detalhe já citado: ${lead.productDetail}`);
   if (lead.productPrice) facts.push(`Preço do produto já citado: ${lead.productPrice}`);
   if (lead.deliveryArea) facts.push(`Área de entrega já citada: ${lead.deliveryArea}`);
@@ -220,6 +247,10 @@ function updateLead(lead, messages) {
   }
 
   const salesIntent = hasAny(normalizedAll, [
+    /quero vender mais/,
+    /vender mais/,
+    /vendo /,
+    /venda /,
     /vender online/,
     /verder online/,
     /vender pela internet/,
@@ -233,6 +264,13 @@ function updateLead(lead, messages) {
     /acai/,
     /hamburguer/,
     /pizza/,
+    /manicoba/,
+    /maniçoba/,
+    /marmita/,
+    /tacaca/,
+    /tacacá/,
+    /comida/,
+    /lanche/,
     /bairro/,
     /bairo/
   ]);
@@ -253,7 +291,7 @@ function updateLead(lead, messages) {
 
   const productBusinessCandidate = [...userMessages]
     .reverse()
-    .find((text) => text.length > 8 && /(açaí|acai|bairro|bairo|delivery|produto|comida|lanchonete|restaurante|loja)/i.test(text));
+    .find((text) => text.length > 8 && /(açaí|acai|maniçoba|manicoba|marmita|tacacá|tacaca|bairro|bairo|delivery|produto|comida|lanchonete|restaurante|loja)/i.test(text));
 
   const businessCandidate = productBusinessCandidate || [...userMessages]
     .reverse()
@@ -261,12 +299,16 @@ function updateLead(lead, messages) {
 
   if (businessCandidate) next.business = cleanText(businessCandidate, 180);
 
-  if (hasAny(normalizedLast, [/acai|bairro|bairo|delivery|produto|servico/])) {
+  const productFromConversation = extractFoodProduct(allUserText);
+  if (productFromConversation) next.product = productFromConversation;
+
+  if (hasAny(normalizedLast, [/acai|maniçoba|manicoba|marmita|tacaca|tacacá|comida|lanche|bairro|bairo|delivery|produto|servico/])) {
     next.business = cleanText(lastUser, 180);
   }
 
   if (hasAny(normalizedAll, [/acai.*litro|litro.*acai|açaí.*litro|litro.*açaí|polpa|in natura|caroco|carocos|caroço|caroços/])) {
     next.productDetail = 'açaí em litro, polpa in natura';
+    next.product = 'açaí em litro';
     next.business = next.business || 'vende açaí em litro no bairro';
   }
 
@@ -395,6 +437,7 @@ Tom:
 Estado atual do lead:
 Nome: ${lead.name || 'não informado'}
 Negócio/objetivo: ${lead.business || lead.goal || 'não informado'}
+Produto já citado: ${lead.product || 'não informado'}
 Produto/detalhe já citado: ${lead.productDetail || 'não informado'}
 Preço do produto já citado: ${lead.productPrice || 'não informado'}
 Área de entrega já citada: ${lead.deliveryArea || 'não informada'}
@@ -525,6 +568,10 @@ function priorityReply(lead, lastUserText = '', messages = []) {
     .map((message) => message.content)
     .join('\n'));
 
+  if (isAssistantNameQuestion(lastUserText)) {
+    return 'Meu nome é Hélio.\n\nSou o consultor da Propagação Digital.\n\nE você é o cliente que estou atendendo agora.';
+  }
+
   if (isNameQuestion(lastUserText)) {
     if (lead.name) {
       return `Seu nome é ${lead.name}.\n\nEu errei ao repetir perguntas que você já tinha respondido.\nVou seguir com o que já tenho anotado.`;
@@ -536,16 +583,21 @@ function priorityReply(lead, lastUserText = '', messages = []) {
   if (isFrustrated(lastUserText)) {
     const known = [];
     if (lead.name) known.push(`seu nome é ${lead.name}`);
-    if (lead.productDetail) known.push(`você vende ${lead.productDetail}`);
+    if (lead.productDetail || lead.product) known.push(`você vende ${productLabel(lead)}`);
     if (lead.productPrice) known.push(`o preço é ${lead.productPrice} o litro`);
     if (lead.deliveryArea) known.push(`a entrega é ${lead.deliveryArea}`);
 
-    return `Você tem razão em reclamar.\n\nEu repeti pergunta que você já tinha respondido.\n\nO que eu tenho anotado até aqui:\n${known.length ? known.map((item) => `- ${item}`).join('\n') : '- ainda faltam dados claros'}\n\nVou continuar a partir disso, sem voltar para o começo.\n\nO próximo passo correto é montar a oferta e encaminhar para o WhatsApp com esse resumo.`;
+    return `Você tem razão em reclamar.\n\nEu puxei uma informação errada e isso atrapalhou a conversa.\n\nO que eu tenho anotado até aqui:\n${known.length ? known.map((item) => `- ${item}`).join('\n') : '- ainda faltam dados claros'}\n\nVou continuar a partir disso, sem voltar para o começo.\n\nPara vender mais ${productLabel(lead)}, o caminho certo é uma oferta simples no WhatsApp, fotos reais, anúncio no bairro e uma página/cardápio direto para pedido.`;
   }
 
   if (lead.deliveryArea && hasAny(last, [/so no meu bairro|só no meu bairro|meu bairro|somente no bairro|apenas no bairro|no bairro/])) {
     const name = lead.name ? `${lead.name}, ` : '';
-    return `${name}perfeito.\n\nÁrea de entrega anotada:\n${lead.deliveryArea}.\n\nResumo da oferta até aqui:\n- açaí em litro, polpa in natura;\n- ${lead.productPrice || 'preço ainda não informado'} o litro;\n- entrega ${lead.deliveryArea};\n- pedido direto pelo WhatsApp.\n\nAgora falta só definir uma chamada forte para o anúncio.\n\nVocê prefere destacar “açaí puro/in natura” ou “entrega rápida no bairro”?`;
+    return `${name}perfeito.\n\nÁrea de entrega anotada:\n${lead.deliveryArea}.\n\nResumo da oferta até aqui:\n- produto: ${productLabel(lead)};\n- ${lead.productPrice || 'preço ainda não informado'};\n- entrega ${lead.deliveryArea};\n- pedido direto pelo WhatsApp.\n\nAgora falta só definir uma chamada forte para o anúncio.\n\nVocê prefere destacar a qualidade do produto ou a entrega rápida no bairro?`;
+  }
+
+  if (lead.product && lead.planPreference && hasAny(last, [/^simples\b|vender mais|quero vender|o que voce me diz|oque voce me diz|o que você me diz|me orienta|proximo|próximo/])) {
+    const name = lead.name ? `${lead.name}, ` : '';
+    return `${name}vamos seguir pelo caminho simples para vender mais ${productLabel(lead)}.\n\nEu faria assim:\n1. uma página/cardápio direto para pedido no WhatsApp;\n2. fotos reais de ${productLabel(lead)};\n3. uma oferta clara para o bairro;\n4. anúncio local para quem mora perto.\n\nSem complicar.\n\nAgora preciso saber:\ncomo o cliente compra hoje, retirada ou entrega?`;
   }
 
   const acaiContext = context.includes('acai') || context.includes('açaí') || lead.productDetail;
@@ -606,8 +658,10 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
     return 'Olha, meu amigo, eu até poderia tentar te responder, mas para esse tipo de assunto eu recomendo você procurar no ChatGPT. 😄\n\nPor aqui eu consigo te ajudar melhor com site, loja virtual, Google, tráfego pago, automação e atendimento para o seu negócio.';
   }
 
-  if (hasAny(last, [/exemplo|modelo|foto|imagem|como e|como seria|cardapio|cardapio digital|pagina de pedidos/]) && hasAny(context, [/acai|bairro|whatsapp|motoboy|entregador|vender/])) {
-    return `Claro, Paulo.\n\nUm cardápio digital para seu açaí poderia ficar assim:\n\n**Açaí do Paulo - Pedidos pelo WhatsApp**\n\n1. Escolha o tamanho:\n- 300ml\n- 500ml\n- 700ml\n\n2. Escolha os adicionais:\n- Leite condensado\n- Leite em pó\n- Granola\n- Banana\n- Morango\n\n3. Escolha a forma de entrega:\n- Retirar no local\n- Entrega de moto no bairro\n\n4. Botão final:\n**Enviar pedido no WhatsApp**\n\nQuando o cliente clicar, o WhatsApp já abre com o pedido organizado:\ntamanho, adicionais, endereço e forma de pagamento.\n\nAssim você não precisa ficar perguntando tudo manualmente e o motoboy já recebe o pedido mais claro.`;
+  if (hasAny(last, [/exemplo|modelo|foto|imagem|como seria|cardapio|cardapio digital|pagina de pedidos/]) && hasAny(context, [/bairro|whatsapp|motoboy|entregador|vender|comida|delivery/])) {
+    const product = productLabel(lead);
+    const businessName = lead.name ? `${product} do ${lead.name}` : product;
+    return `Claro.\n\nUm cardápio digital para ${product} poderia ficar assim:\n\n**${businessName} - Pedidos pelo WhatsApp**\n\n1. Oferta principal:\n- ${product}\n- descrição curta do preparo\n- foto real do produto\n\n2. Pedido:\n- quantidade\n- observações\n- endereço de entrega ou retirada\n\n3. Botão final:\n**Enviar pedido no WhatsApp**\n\nQuando o cliente clicar,\no WhatsApp já abre com o pedido organizado.\n\nAssim você atende mais rápido e evita perder venda por conversa confusa.`;
   }
 
   if (hasAny(last, [/acai|delivery|cardapio|bairro|bairo|comida|lanchonete|restaurante/])) {
@@ -626,14 +680,14 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
 
     if (lead.planPreference && (lead.channel || lead.stage)) {
       const name = lead.name ? `${lead.name}, ` : '';
-      return `${name}perfeito.\n\nComo você já escolheu uma estrutura simples,\nnão vou voltar para o começo.\n\nAgora precisamos definir o produto principal da página:\no que exatamente vai aparecer no cardápio/oferta?`;
+      return `${name}perfeito.\n\nComo você já escolheu uma estrutura simples,\nnão vou voltar para o começo.\n\nVamos focar em vender mais ${productLabel(lead)}.\n\nA estrutura correta é:\n1. oferta clara;\n2. foto real do produto;\n3. botão direto para pedido no WhatsApp;\n4. anúncio no bairro.\n\nQual é a melhor forma de entregar ou retirar o pedido hoje?`;
     }
 
     const name = lead.name ? `${lead.name}, agora entendi melhor` : 'Agora entendi melhor';
     const nextQuestion = lead.channel
       ? 'Você quer que essa estrutura seja mais simples para começar rápido ou mais completa para escalar os pedidos?'
       : 'Você já recebe pedidos pelo WhatsApp hoje ou ainda vai começar do zero?';
-    return `${name}: você quer vender açaí para pessoas do seu bairro.\n\nNesse caso, eu começaria com uma estrutura simples e direta:\n1. Cardápio/página de pedidos pelo WhatsApp.\n2. Fotos boas dos produtos e combos.\n3. Google/SEO local para aparecer para quem procura açaí perto de você.\n4. Tráfego pago leve no bairro para trazer pedidos todos os dias.\n\n${nextQuestion}`;
+    return `${name}: você quer vender ${productLabel(lead)} para pessoas da sua região.\n\nNesse caso, eu começaria com uma estrutura simples e direta:\n1. cardápio/página de pedidos pelo WhatsApp;\n2. fotos reais do produto;\n3. Google/SEO local para aparecer para quem procura perto de você;\n4. tráfego pago leve no bairro para trazer pedidos todos os dias.\n\n${nextQuestion}`;
   }
 
   if ((lead.channel || lead.stage) && (context.includes('vender') || context.includes('online') || context.includes('acai') || context.includes('bairro'))) {
@@ -653,7 +707,7 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
 
       const periodLine = lead.peakPeriod ? `\nComo você vende mais pela ${lead.peakPeriod}, os anúncios devem começar antes desse horário.` : '';
       const deliveryLine = lead.delivery ? '\nComo você quer usar entregador/motoboy, o pedido precisa chegar organizado com endereço e forma de pagamento.' : '';
-      return `Perfeito. Vamos pelo caminho simples para vender rápido.${periodLine}${deliveryLine}\n\nEu montaria assim:\n1. cardápio/página simples com seus principais tamanhos e adicionais;\n2. botão direto para pedido no WhatsApp;\n3. fotos boas dos copos e combos;\n4. anúncio local no bairro para gerar pedido rápido.\n\nO próximo passo é definir o cardápio inicial:\nquais tamanhos de açaí você vende hoje?`;
+      return `Perfeito. Vamos pelo caminho simples para vender rápido.${periodLine}${deliveryLine}\n\nEu montaria assim:\n1. cardápio/página simples para ${productLabel(lead)};\n2. botão direto para pedido no WhatsApp;\n3. fotos reais do produto;\n4. anúncio local no bairro para gerar pedido rápido.\n\nO próximo passo é definir a oferta inicial:\nqual é a principal opção de ${productLabel(lead)} que você quer vender primeiro?`;
     }
 
     if (lead.peakPeriod) {
@@ -733,19 +787,19 @@ module.exports = async function handler(req, res) {
     nextLead = lead;
     let reply = priorityReply(lead, messages[messages.length - 1]?.content || '', messages);
 
-    if (!reply && GEMINI_API_KEY) {
-      try {
-        reply = await callGemini(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
-      } catch (error) {
-        console.error('[pd-atendimento-gemini]', error.message);
-      }
-    }
-
     if (!reply && OPENAI_API_KEY) {
       try {
         reply = await callOpenAI(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
       } catch (error) {
         console.error('[pd-atendimento-ai]', error.message);
+      }
+    }
+
+    if (!reply && GEMINI_API_KEY) {
+      try {
+        reply = await callGemini(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
+      } catch (error) {
+        console.error('[pd-atendimento-gemini]', error.message);
       }
     }
 
