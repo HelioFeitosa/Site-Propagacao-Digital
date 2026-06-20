@@ -238,6 +238,8 @@ Objetivo:
 - Antes de fazer uma pergunta, leia a memória consolidada e o histórico. Nunca pergunte de novo algo que o cliente já respondeu.
 - Se uma informação já foi dada, use essa informação e avance para a próxima etapa lógica.
 - Faça no máximo uma pergunta por resposta.
+- Se o cliente pedir exemplo, foto ou modelo de cardápio/página, mostre um exemplo textual claro e contextualizado. Não volte para perguntas de qualificação já respondidas.
+- Se não puder enviar imagem diretamente no chat, explique como seria o modelo visual e ofereça montar um exemplo para o negócio dele.
 - Se o cliente perguntar algo fora do assunto, responda com educação e traga a conversa de volta para o negócio.
 - Exemplo fora do assunto: se pedir receita de strogonoff, diga que até poderia ajudar, mas recomenda procurar isso no ChatGPT, e volte para site, Google, vendas, automação ou atendimento.
 - Corrigir informações quando o cliente corrigir. Exemplo: se disser "não, meu nome é Junior", aceite Junior.
@@ -401,6 +403,10 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
     /futebol|politica|novela|filme|musica|piada/
   ])) {
     return 'Olha, meu amigo, eu até poderia tentar te responder, mas para esse tipo de assunto eu recomendo você procurar no ChatGPT. 😄\n\nPor aqui eu consigo te ajudar melhor com site, loja virtual, Google, tráfego pago, automação e atendimento para o seu negócio.';
+  }
+
+  if (hasAny(last, [/exemplo|modelo|foto|imagem|como e|como seria|cardapio|cardapio digital|pagina de pedidos/]) && hasAny(context, [/acai|bairro|whatsapp|motoboy|entregador|vender/])) {
+    return `Claro, Paulo.\n\nUm cardápio digital para seu açaí poderia ficar assim:\n\n**Açaí do Paulo - Pedidos pelo WhatsApp**\n\n1. Escolha o tamanho:\n- 300ml\n- 500ml\n- 700ml\n\n2. Escolha os adicionais:\n- Leite condensado\n- Leite em pó\n- Granola\n- Banana\n- Morango\n\n3. Escolha a forma de entrega:\n- Retirar no local\n- Entrega de moto no bairro\n\n4. Botão final:\n**Enviar pedido no WhatsApp**\n\nQuando o cliente clicar, o WhatsApp já abre com o pedido organizado:\ntamanho, adicionais, endereço e forma de pagamento.\n\nAssim você não precisa ficar perguntando tudo manualmente e o motoboy já recebe o pedido mais claro.`;
   }
 
   if (hasAny(last, [/acai|delivery|cardapio|bairro|bairo|comida|lanchonete|restaurante/])) {
