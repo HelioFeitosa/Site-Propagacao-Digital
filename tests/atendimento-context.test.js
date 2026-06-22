@@ -101,5 +101,34 @@ function includesAny(text, words) {
   assert.ok(includesAny(marta.lead.product || '', ['bolo decorados']));
   assert.ok(includesAny(marta.replies.at(-1), ['marta']));
 
+  const colchao = await runFlow([
+    'sou João e vendo colchoes no meu ponto no julia sefer',
+    'simples',
+    'entrega',
+    'eu ja falei',
+    'voce não lembra da conversa que tivemos pelo celular ?'
+  ]);
+  assert.equal(colchao.lead.name, 'João');
+  assert.ok(includesAny(colchao.lead.product || '', ['colchoes']));
+  assert.equal(colchao.lead.deliveryMethod, 'entrega');
+  assert.ok(includesAny(colchao.replies.at(-1), ['nao consigo acessar automaticamente', 'conversa']));
+
+  const perguntaDireta = await runFlow([
+    'meu nome é Carlos e vendo marmita',
+    'voce é uma inteligencia Artificial ?',
+    'porque voce ignorou a minha pergunta?'
+  ]);
+  assert.equal(perguntaDireta.lead.name, 'Carlos');
+  assert.ok(includesAny(perguntaDireta.replies.at(-2), ['inteligencia artificial', 'atendente virtual']));
+  assert.ok(includesAny(perguntaDireta.replies.at(-1), ['deveria ter respondido', 'atendente virtual']));
+
+  const offTopic = await runFlow([
+    'me chamo Ana e tenho uma loja de roupas',
+    'me passa uma receita de strogonoff'
+  ]);
+  assert.equal(offTopic.lead.name, 'Ana');
+  assert.ok(includesAny(offTopic.replies.at(-1), ['chatgpt', 'site', 'google']));
+  assert.ok(!includesAny(offTopic.replies.at(-1), ['estrutura simples ou completa']));
+
   console.log('Atendimento context regression tests passed.');
 })();

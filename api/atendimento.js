@@ -2,6 +2,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const MODEL = process.env.OPENAI_MODEL || 'gpt-5-mini';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+const ALLOW_GEMINI_FALLBACK = process.env.ALLOW_GEMINI_FALLBACK === 'true';
 
 const rateLimit = new Map();
 
@@ -341,7 +342,7 @@ function updateLead(lead, messages) {
     ];
     const directNamePatterns = [
       /(?:sou eu)\s+([A-Za-zÀ-ÿ'-]{2,})/i,
-      /(?:meu nome\s+(?:é|e|eh)|meu no\s+(?:é|e|eh)|me chamo|eu sou|sou|aqui\s+(?:é|e|eh)|nome\s+(?:é|e|eh))\s+(?:a|o)?\s*([A-Za-zÀ-ÿ'-]{2,})/i,
+      /(?:meu nome\s+(?:é|e|eh)|meu no\s+(?:é|e|eh)|me chamo|eu sou|sou|aqui\s+(?:é|e|eh)|nome\s+(?:é|e|eh))\s+(?:(?:a|o)\s+)?([A-Za-zÀ-ÿ'-]{2,})/i,
       /(?:olá|ola|oi|opa),?\s*(?:meu nome é|me chamo|sou)\s*([A-Za-zÀ-ÿ'-]{2,})/i
     ];
     const correctionName = cleanName((correctionNamePatterns.map((pattern) => lastUser.match(pattern)).find(Boolean) || [])[1]);
@@ -507,6 +508,8 @@ function updateLead(lead, messages) {
     hasAny(normalizedConversation, [/retirada ou entrega|cliente compra hoje|como o cliente compra/]);
   if (methodWasAsked && hasAny(normalizedLast, [/\bentrega\b|entrego|delivery|levo ate|levo até/])) next.deliveryMethod = 'entrega';
   if (methodWasAsked && hasAny(normalizedLast, [/retirada|retira|buscar|busca no ponto|pega no ponto/])) next.deliveryMethod = next.deliveryMethod ? `${next.deliveryMethod} e retirada` : 'retirada no ponto';
+  if (!next.deliveryMethod && next.product && hasAny(normalizedLast, [/^entrega$/, /\bentrega\b|entrego|delivery|levo ate|levo até/])) next.deliveryMethod = 'entrega';
+  if (!next.deliveryMethod && next.product && hasAny(normalizedLast, [/^retirada$/, /retirada|retira|buscar|busca no ponto|pega no ponto/])) next.deliveryMethod = 'retirada no ponto';
 
   if (!next.deliveryMethod && methodWasAsked) {
     for (let index = 1; index < messages.length; index += 1) {
@@ -1032,7 +1035,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    if (!reply && GEMINI_API_KEY) {
+    if (!reply && GEMINI_API_KEY && ALLOW_GEMINI_FALLBACK) {
       try {
         reply = await callGemini(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
       } catch (error) {
