@@ -115,7 +115,7 @@ function extractMoneyValue(text) {
 
 function extractFoodProduct(text) {
   const value = cleanText(text, 180);
-  const direct = value.match(/(?:vendo|venda|tenho|trabalho com|faco|faço)\s+(.+?)(?:\s+no meu bairro|\s+no bairro|\s+na minha cidade|!|\.|$)/i);
+  const direct = value.match(/(?:vendo|venda|tenho|trabalho com|faco|faço)\s+(.+?)(?:\s+no meu bairro|\s+no bairro|\s+no meu ponto|\s+na minha loja|\s+na minha cidade|!|\.|$)/i);
   const raw = direct ? direct[1] : '';
   const product = raw
     .replace(/\b(mais|online|todo dia|todos os dias|pelo whatsapp|no whatsapp)\b/gi, '')
@@ -148,6 +148,18 @@ function isAssistantNameQuestion(text) {
   ]);
 }
 
+function isPreviousConversationQuestion(text) {
+  return hasAny(normalizeForMatch(text), [
+    /lembra.*conversa/,
+    /lembra.*celular/,
+    /conversando.*celular/,
+    /continue.*aqui/,
+    /podemos continuar/,
+    /estava conversando/,
+    /agorinha/
+  ]);
+}
+
 function isFrustrated(text) {
   return hasAny(normalizeForMatch(text), [
     /doido/,
@@ -164,6 +176,9 @@ function isFrustrated(text) {
     /inconsistente/,
     /inconcistente/,
     /ja te falei/,
+    /ja falei/,
+    /eu ja falei/,
+    /j[aá] falei/,
     /acabei de falar/,
     /responde direito/
   ]);
@@ -177,6 +192,8 @@ function buildMemorySummary(lead, messages) {
   if (lead.productDetail) facts.push(`Produto/detalhe já citado: ${lead.productDetail}`);
   if (lead.productPrice) facts.push(`Preço do produto já citado: ${lead.productPrice}`);
   if (lead.deliveryArea) facts.push(`Área de entrega já citada: ${lead.deliveryArea}`);
+  if (lead.deliveryMethod) facts.push(`Forma de compra/entrega já citada: ${lead.deliveryMethod}`);
+  if (lead.location) facts.push(`Local/bairro já citado: ${lead.location}`);
   if (lead.goal) facts.push(`Objetivo informado: ${lead.goal}`);
   if (lead.salesGoal) facts.push(`Meta comercial já citada: ${lead.salesGoal}`);
   if (lead.service && services[lead.service]) facts.push(`Serviço provável: ${services[lead.service]}`);
@@ -217,6 +234,7 @@ function updateLead(lead, messages) {
       /(?:n(?:ão|ao|\?) .*?nome.*?(?:é|e)|meu nome n(?:ão|ao|\?) .*?(?:é|e).*?meu nome (?:é|e)|nome correto (?:é|e)|corrigindo.*?nome.*?(?:é|e))\s+([A-Za-zÀ-ÿ'-]{2,})/i
     ];
     const directNamePatterns = [
+      /(?:sou eu)\s+([A-Za-zÀ-ÿ'-]{2,})/i,
       /(?:meu nome (?:é|e)|meu no (?:é|e)|me chamo|eu sou|sou|aqui (?:é|e)|nome (?:é|e))\s+(?:a|o)?\s*([A-Za-zÀ-ÿ'-]{2,})/i,
       /(?:olá|ola|oi|opa),?\s*(?:meu nome é|me chamo|sou)\s*([A-Za-zÀ-ÿ'-]{2,})/i
     ];
@@ -302,6 +320,9 @@ function updateLead(lead, messages) {
   const productFromConversation = extractFoodProduct(allUserText);
   if (productFromConversation) next.product = productFromConversation;
 
+  const locationMatch = allUserText.match(/(?:no meu ponto no|no ponto no|no bairro|em|na)\s+([A-Za-zÀ-ÿ0-9\s'-]{3,40})(?:!|\.|,|\n|$)/i);
+  if (locationMatch) next.location = cleanText(locationMatch[1], 80);
+
   if (hasAny(normalizedLast, [/acai|maniçoba|manicoba|marmita|tacaca|tacacá|comida|lanche|bairro|bairo|delivery|produto|servico/])) {
     next.business = cleanText(lastUser, 180);
   }
@@ -362,6 +383,30 @@ function updateLead(lead, messages) {
     }
   }
 
+  const methodWasAsked = hasAny(normalizedLastAssistant, [/retirada ou entrega|cliente compra hoje|como o cliente compra|forma de entregar|retirar o pedido|entregar ou retirar/]) ||
+    hasAny(normalizedConversation, [/retirada ou entrega|cliente compra hoje|como o cliente compra/]);
+  if (methodWasAsked && hasAny(normalizedLast, [/\bentrega\b|entrego|delivery|levo ate|levo até/])) next.deliveryMethod = 'entrega';
+  if (methodWasAsked && hasAny(normalizedLast, [/retirada|retira|buscar|busca no ponto|pega no ponto/])) next.deliveryMethod = next.deliveryMethod ? `${next.deliveryMethod} e retirada` : 'retirada no ponto';
+
+  if (!next.deliveryMethod && methodWasAsked) {
+    for (let index = 1; index < messages.length; index += 1) {
+      const previous = messages[index - 1];
+      const current = messages[index];
+      if (current.role !== 'user') continue;
+      const previousAskedMethod = previous.role === 'assistant' && hasAny(normalizeForMatch(previous.content), [
+        /retirada ou entrega/,
+        /cliente compra hoje/,
+        /como o cliente compra/,
+        /forma de entregar/,
+        /retirar o pedido/,
+        /entregar ou retirar/
+      ]);
+      const currentText = normalizeForMatch(current.content);
+      if (previousAskedMethod && hasAny(currentText, [/\bentrega\b|entrego|delivery|levo ate|levo até/])) next.deliveryMethod = 'entrega';
+      if (previousAskedMethod && hasAny(currentText, [/retirada|retira|buscar|busca no ponto|pega no ponto/])) next.deliveryMethod = next.deliveryMethod ? `${next.deliveryMethod} e retirada` : 'retirada no ponto';
+    }
+  }
+
   if (hasAny(normalizedAll, [/whatsapp|zap|zapi/])) next.channel = 'WhatsApp';
   if (hasAny(normalizedAll, [/instagram|insta/])) next.channel = next.channel ? `${next.channel} e Instagram` : 'Instagram';
   if (hasAny(normalizedAll, [/ifood|i food/])) next.channel = next.channel ? `${next.channel} e iFood` : 'iFood';
@@ -404,6 +449,7 @@ Objetivo:
 - Se o cliente disser que quer vender online, vender todo dia, vender no bairro, vender açaí, comida, produtos ou delivery, priorize uma estrutura de venda online/local: loja virtual simples, cardápio/página de pedidos, WhatsApp, tráfego pago e SEO local. Não recomende Automação com IA como primeira solução nesses casos.
 - Antes de fazer uma pergunta, leia a memória consolidada e o histórico. Nunca pergunte de novo algo que o cliente já respondeu.
 - Se uma informação já foi dada, use essa informação e avance para a próxima etapa lógica.
+- Se o cliente perguntar se você lembra de uma conversa feita no celular, WhatsApp, outro aparelho ou outra sessão, seja honesto: você só vê o histórico enviado nesta conversa atual. Não finja lembrar. Peça um resumo curto e continue.
 - Se o cliente responder "simples", "rápido", "simples pra vender rápido" ou "completo", aceite como resposta sobre o tipo de estrutura e avance para plano/WhatsApp. Não repita a pergunta sobre estrutura simples ou completa.
 - Se o cliente disser que vende "açaí em litro", "polpa", "in natura" ou corrigir que não vende copos/tamanhos, aceite isso como detalhe do produto. Não pergunte novamente quais tamanhos vende. Avance para preço, bairros de entrega, fotos ou oferta.
 - Faça no máximo uma pergunta por resposta.
@@ -441,6 +487,8 @@ Produto já citado: ${lead.product || 'não informado'}
 Produto/detalhe já citado: ${lead.productDetail || 'não informado'}
 Preço do produto já citado: ${lead.productPrice || 'não informado'}
 Área de entrega já citada: ${lead.deliveryArea || 'não informada'}
+Forma de compra/entrega já citada: ${lead.deliveryMethod || 'não informada'}
+Local/bairro já citado: ${lead.location || 'não informado'}
 Meta comercial já citada: ${lead.salesGoal || 'não informada'}
 Serviço provável: ${lead.service ? services[lead.service] : 'não definido'}
 Canal de venda já citado: ${lead.channel || 'não informado'}
@@ -568,6 +616,19 @@ function priorityReply(lead, lastUserText = '', messages = []) {
     .map((message) => message.content)
     .join('\n'));
 
+  if (isPreviousConversationQuestion(lastUserText)) {
+    const known = [];
+    if (lead.name) known.push(`seu nome é ${lead.name}`);
+    if (lead.productDetail || lead.product) known.push(`você trabalha com ${productLabel(lead)}`);
+    if (lead.business) known.push(`você comentou: ${lead.business}`);
+
+    if (known.length) {
+      return `Consigo continuar pelo que está nesta conversa aqui.\n\nO que tenho anotado agora:\n${known.map((item) => `- ${item}`).join('\n')}\n\nMas eu não consigo acessar automaticamente a conversa feita em outro aparelho.\n\nSe faltou algo que você falou no celular, me diga só esse ponto que eu continuo daqui.`;
+    }
+
+    return 'Consigo continuar por aqui, sim.\n\nMas preciso ser transparente:\neu não consigo acessar automaticamente a conversa que você fez em outro aparelho.\n\nSe você me lembrar seu nome e o que você vende ou quer melhorar, eu continuo daqui sem problema.';
+  }
+
   if (isAssistantNameQuestion(lastUserText)) {
     return 'Meu nome é Hélio.\n\nSou o consultor da Propagação Digital.\n\nE você é o cliente que estou atendendo agora.';
   }
@@ -586,6 +647,7 @@ function priorityReply(lead, lastUserText = '', messages = []) {
     if (lead.productDetail || lead.product) known.push(`você vende ${productLabel(lead)}`);
     if (lead.productPrice) known.push(`o preço é ${lead.productPrice} o litro`);
     if (lead.deliveryArea) known.push(`a entrega é ${lead.deliveryArea}`);
+    if (lead.deliveryMethod) known.push(`a forma de compra é ${lead.deliveryMethod}`);
 
     return `Você tem razão em reclamar.\n\nEu puxei uma informação errada e isso atrapalhou a conversa.\n\nO que eu tenho anotado até aqui:\n${known.length ? known.map((item) => `- ${item}`).join('\n') : '- ainda faltam dados claros'}\n\nVou continuar a partir disso, sem voltar para o começo.\n\nPara vender mais ${productLabel(lead)}, o caminho certo é uma oferta simples no WhatsApp, fotos reais, anúncio no bairro e uma página/cardápio direto para pedido.`;
   }
@@ -598,6 +660,19 @@ function priorityReply(lead, lastUserText = '', messages = []) {
   if (lead.product && lead.planPreference && hasAny(last, [/^simples\b|vender mais|quero vender|o que voce me diz|oque voce me diz|o que você me diz|me orienta|proximo|próximo/])) {
     const name = lead.name ? `${lead.name}, ` : '';
     return `${name}vamos seguir pelo caminho simples para vender mais ${productLabel(lead)}.\n\nEu faria assim:\n1. uma página/cardápio direto para pedido no WhatsApp;\n2. fotos reais de ${productLabel(lead)};\n3. uma oferta clara para o bairro;\n4. anúncio local para quem mora perto.\n\nSem complicar.\n\nAgora preciso saber:\ncomo o cliente compra hoje, retirada ou entrega?`;
+  }
+
+  if (lead.product && lead.deliveryMethod && hasAny(last, [/\bentrega\b|entrego|delivery|sim continue|continue|pode continuar|vamos continuar/])) {
+    const name = lead.name ? `${lead.name}, ` : '';
+    const locationLine = lead.location ? `\n- local: ${lead.location};` : '';
+    const adTarget = lead.location ? `perto de ${lead.location}` : 'perto do seu ponto';
+    return `${name}perfeito.\n\nEntão já temos:\n- produto: ${productLabel(lead)};\n- venda no ponto físico;\n- forma de compra: ${lead.deliveryMethod};${locationLine}\n\nAgora o próximo passo é montar uma oferta simples para atrair cliente.\n\nEu trabalharia com:\n1. fotos reais dos produtos;\n2. anúncio para pessoas ${adTarget};\n3. botão direto para WhatsApp;\n4. chamada para visitar o ponto ou pedir entrega.\n\nQual tipo de ${productLabel(lead)} você mais quer vender primeiro?`;
+  }
+
+  if (lead.product && hasAny(last, [/vendo|venda|tenho|trabalho com|meu ponto|minha loja|loja fisica|loja física/])) {
+    const name = lead.name ? `${lead.name}, ` : '';
+    const locationText = lead.location ? ` em ${lead.location}` : '';
+    return `${name}entendi.\n\nVocê vende ${productLabel(lead)} no seu ponto físico${locationText}.\n\nNesse caso, eu não começaria falando de loja virtual completa.\n\nEu começaria com uma estrutura mais direta:\n1. página simples mostrando seus principais ${productLabel(lead)};\n2. botão para chamar no WhatsApp;\n3. Google/SEO local para quem procura perto de você;\n4. anúncios no bairro para levar gente até o seu ponto.\n\nSeu objetivo principal é levar mais pessoas para a loja ou vender pelo WhatsApp também?`;
   }
 
   const acaiContext = context.includes('acai') || context.includes('açaí') || lead.productDetail;
