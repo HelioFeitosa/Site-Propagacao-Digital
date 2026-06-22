@@ -1109,8 +1109,14 @@ module.exports = async function handler(req, res) {
     if (OPENAI_API_KEY) {
       try {
         reply = await callOpenAI(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
-        if (reply) provider = 'openai';
+        if (reply) {
+          provider = 'openai';
+        } else {
+          provider = 'openai-empty';
+          console.error('[pd-atendimento-ai] resposta OpenAI sem texto');
+        }
       } catch (error) {
+        provider = 'openai-error';
         console.error('[pd-atendimento-ai]', error.message);
       }
     } else {
@@ -1119,7 +1125,6 @@ module.exports = async function handler(req, res) {
 
     if (!reply) {
       reply = priorityReply(lead, messages[messages.length - 1]?.content || '', messages);
-      if (reply && provider !== 'missing-openai-key') provider = 'rules';
     }
 
     if (!reply && GEMINI_API_KEY && ALLOW_GEMINI_FALLBACK) {
