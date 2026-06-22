@@ -12,14 +12,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$key = Get-Clipboard -Ra
 if errorlevel 1 goto fail
 
 cmd /c vercel env rm OPENAI_API_KEY production --yes --scope heliofeitosa72-3091s-projects >nul 2>nul
-type .openai-key.tmp | cmd /c vercel env add OPENAI_API_KEY production --scope heliofeitosa72-3091s-projects
+cmd /c "vercel env add OPENAI_API_KEY production --scope heliofeitosa72-3091s-projects < .openai-key.tmp"
 if errorlevel 1 goto cleanup_fail
 
 cmd /c vercel env rm OPENAI_MODEL production --yes --scope heliofeitosa72-3091s-projects >nul 2>nul
-echo gpt-5-mini | cmd /c vercel env add OPENAI_MODEL production --scope heliofeitosa72-3091s-projects
+echo gpt-5-mini> .openai-model.tmp
+cmd /c "vercel env add OPENAI_MODEL production --scope heliofeitosa72-3091s-projects < .openai-model.tmp"
 if errorlevel 1 goto cleanup_fail
 
 del .openai-key.tmp >nul 2>nul
+del .openai-model.tmp >nul 2>nul
 
 set VERCEL_TELEMETRY_DISABLED=1
 cmd /c vercel deploy --prod --yes --scope heliofeitosa72-3091s-projects
@@ -33,6 +35,7 @@ exit /b 0
 
 :cleanup_fail
 del .openai-key.tmp >nul 2>nul
+del .openai-model.tmp >nul 2>nul
 :fail
 echo.
 echo ERRO: nao foi possivel instalar a chave automaticamente.
