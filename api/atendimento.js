@@ -128,12 +128,14 @@ function extractFoodProduct(text) {
 }
 
 function cleanProductPhrase(value) {
-  return cleanText(value, 120)
+  const product = cleanText(value, 120)
     .split(/\b(?:no meu bairro|no bairro|no meu ponto|na minha loja|na minha cidade|pelo whatsapp|no whatsapp|whatsapp|instagram|facebook|google)\b/i)[0]
     .replace(/\b(?:eu vendo|vendo|venda|tenho|trabalho com|faco|faço|mais|online|todo dia|todos os dias)\b/gi, '')
     .replace(/^[,.;:\s]+/, '')
     .replace(/\b(?:uma|um|a|o|as|os)\s+/i, '')
     .trim();
+  if (/^pizza$/i.test(product)) return 'pizzas';
+  return product;
 }
 
 const businessProductRules = [
@@ -176,7 +178,12 @@ function cleanLocationCandidate(value) {
     /servicos/,
     /serviços/,
     /manutencao/,
-    /manutenção/
+    /manutenção/,
+    /pizzaria/,
+    /padaria/,
+    /sapataria/,
+    /acougue/,
+    /açougue/
   ])) return '';
   return location;
 }
@@ -264,6 +271,36 @@ function isSimplePlanChoice(text) {
     /vender rapido/,
     /vender rápido/,
     /sem complicar/
+  ]);
+}
+
+function isWhatsAppChannelReply(text) {
+  return hasAny(normalizeForMatch(text), [
+    /^whatsapp$/,
+    /^zap$/,
+    /pelo zap/,
+    /pelo whatsapp/,
+    /mais pelo zap/,
+    /mais pelo whatsapp/,
+    /mai pelo zap/,
+    /zap/,
+    /whatsapp/,
+    /ja falei whatsapp/,
+    /já falei whatsapp/,
+    /eu ja falei whatsapp/,
+    /eu já falei whatsapp/
+  ]);
+}
+
+function rejectsVirtualStore(text) {
+  return hasAny(normalizeForMatch(text), [
+    /nao quero loja virtual/,
+    /não quero loja virtual/,
+    /nao.*loja virtual/,
+    /não.*loja virtual/,
+    /tenho.*pizzaria/,
+    /pequena pizzaria/,
+    /pizzaria/
   ]);
 }
 
@@ -591,6 +628,13 @@ Objetivo:
 - Conversar de forma natural, inteligente e humana, como um bom consultor comercial.
 - Entender nome, negócio, objetivo, urgência e melhor solução.
 - Responder perguntas sobre serviços sem parecer robô de script.
+- Não siga roteiro fixo. Responda exatamente ao que o cliente acabou de dizer.
+- Se o cliente corrigir você, aceite a correção imediatamente e não repita a pergunta anterior.
+- Se o cliente rejeitar uma solução, nunca ofereça a mesma solução na resposta seguinte.
+- Se o cliente disser que tem pizzaria, padaria, sapataria, barbearia, oficina, açougue, lanchonete, loja pequena ou negócio local, não comece por "loja virtual completa". Priorize página/cardápio simples, WhatsApp/Zap, Google local e anúncios locais.
+- Se o cliente disser "pelo Zap", "pelo WhatsApp" ou "mais pelo Zap", aceite isso como canal escolhido. Não pergunte novamente se ele quer WhatsApp.
+- Se o cliente disser "não quero loja virtual", não diga "Lojas Virtuais parece ser um bom caminho". Diga que uma página/cardápio simples com WhatsApp é mais adequada.
+- Se o cliente disser que trabalha com pizza ou tem pizzaria, entenda que ele vende pizzas/comida e precisa de cardápio/pedidos pelo WhatsApp, não de loja virtual completa.
 - Não presuma o serviço só porque a pessoa está em uma página específica. Use a página apenas como contexto fraco.
 - Se o cliente perguntar "de onde você tirou isso?", "não foi isso" ou corrigir uma suposição, peça desculpas, abandone a suposição anterior e siga pelo que o cliente disser depois.
 - Se o cliente disser que quer vender online, vender todo dia, vender no bairro, vender açaí, comida, produtos ou delivery, priorize uma estrutura de venda online/local: loja virtual simples, cardápio/página de pedidos, WhatsApp, tráfego pago e SEO local. Não recomende Automação com IA como primeira solução nesses casos.
@@ -804,13 +848,19 @@ function priorityReply(lead, lastUserText = '', messages = []) {
     return 'Você ainda não me disse seu nome com clareza.\n\nMe diga só seu nome, por favor.';
   }
 
-  if (lead.product && lead.channel === 'WhatsApp' && hasAny(last, [/^whatsapp$/i, /ja falei whatsapp/, /já falei whatsapp/, /eu ja falei whatsapp/, /eu já falei whatsapp/])) {
+  if (lead.product && lead.channel === 'WhatsApp' && isWhatsAppChannelReply(lastUserText)) {
     const name = lead.name ? `${lead.name}, ` : '';
     if (hasAny(last, [/ja falei/, /já falei/, /eu ja falei/, /eu já falei/])) {
       return `${name}você tem razão.\n\nWhatsApp já está anotado.\n\nNão vou perguntar isso de novo.\n\nO próximo passo é montar uma oferta simples para ${productLabel(lead)}:\n1. fotos reais dos produtos;\n2. texto curto com modelos, prazo e forma de encomenda;\n3. botão direto para orçamento no WhatsApp;\n4. anúncio local para atrair clientes perto de você.`;
     }
 
-    return `${name}perfeito, WhatsApp anotado.\n\nEntão o caminho mais simples é:\n1. página/oferta com fotos reais de ${productLabel(lead)};\n2. botão direto para chamar no WhatsApp;\n3. mensagem pronta para o cliente pedir orçamento;\n4. anúncio local levando direto para essa conversa.\n\nAgora preciso saber:\nvocê quer receber pedidos/orçamentos pelo seu WhatsApp pessoal ou por um número da empresa?`;
+    return `${name}perfeito, Zap anotado.\n\nNão precisa de loja virtual completa agora.\n\nPara ${productLabel(lead)}, o melhor caminho é uma estrutura simples para pedido pelo WhatsApp:\n1. cardápio/página com sabores, tamanhos e fotos reais;\n2. botão direto para pedir pelo Zap;\n3. Google local para quem procura perto;\n4. anúncios no bairro levando direto para o WhatsApp.\n\nO próximo passo é destacar os sabores ou combos que você mais quer vender.`;
+  }
+
+  if (lead.product && rejectsVirtualStore(lastUserText)) {
+    const name = lead.name ? `${lead.name}, ` : '';
+    const business = lead.businessType || (last.includes('pizzaria') ? 'pizzaria' : 'negócio');
+    return `${name}agora ficou claro.\n\nVocê tem uma ${business}.\nVocê quer vender mais ${productLabel(lead)} pelo WhatsApp/Zap.\n\nNão vou insistir em loja virtual completa.\n\nEu faria assim:\n1. cardápio/página simples com seus principais produtos;\n2. botão direto para pedido no WhatsApp;\n3. fotos reais e ofertas do dia;\n4. anúncios locais para pessoas perto da sua região.\n\nIsso é mais rápido e mais adequado para uma pequena ${business}.`;
   }
 
   if (extractProductCorrection(lastUserText)) {
@@ -1017,7 +1067,7 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
     return 'Agora ficou claro: o foco é vender todos os dias para clientes da sua região.\n\nPara um negócio como esse, eu começaria com uma página/cardápio de pedidos bem simples no WhatsApp, oferta clara, fotos boas, SEO local e tráfego pago leve para o bairro.\n\nVocê já vende pelo WhatsApp hoje ou ainda vai começar do zero?';
   }
 
-  if (lead.service && services[lead.service]) {
+  if (!lead.product && lead.service && services[lead.service]) {
     const greeting = lead.name ? `${lead.name}, pelo que você explicou` : 'Pelo que você explicou';
     return `${greeting}, ${services[lead.service]} parece ser um bom caminho.\n\nPara eu te orientar melhor, me diga: você quer começar rápido com uma solução mais simples ou montar uma estrutura mais completa para vender todos os dias?`;
   }
@@ -1053,19 +1103,27 @@ module.exports = async function handler(req, res) {
 
     const lead = updateLead(body.lead || {}, messages);
     nextLead = lead;
-    let reply = priorityReply(lead, messages[messages.length - 1]?.content || '', messages);
+    let reply = '';
+    let provider = 'fallback';
 
-    if (!reply && OPENAI_API_KEY) {
+    if (OPENAI_API_KEY) {
       try {
         reply = await callOpenAI(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
+        if (reply) provider = 'openai';
       } catch (error) {
         console.error('[pd-atendimento-ai]', error.message);
       }
     }
 
+    if (!reply) {
+      reply = priorityReply(lead, messages[messages.length - 1]?.content || '', messages);
+      if (reply) provider = 'rules';
+    }
+
     if (!reply && GEMINI_API_KEY && ALLOW_GEMINI_FALLBACK) {
       try {
         reply = await callGemini(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
+        if (reply) provider = 'gemini';
       } catch (error) {
         console.error('[pd-atendimento-gemini]', error.message);
       }
@@ -1075,7 +1133,8 @@ module.exports = async function handler(req, res) {
 
     return sendJson(res, 200, {
       reply: finalReply,
-      lead
+      lead,
+      provider
     });
   } catch (error) {
     console.error('[pd-atendimento]', error);

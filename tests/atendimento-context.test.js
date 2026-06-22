@@ -142,5 +142,18 @@ function includesAny(text, words) {
   assert.ok(!includesAny(oficina.replies.at(-1), ['em de bicicletas']));
   assert.ok(includesAny(oficina.replies.at(-1), ['whatsapp', 'google local', 'servicos']));
 
+  const pizzaria = await runFlow([
+    'ola meu nome é Marcos Eu trabalho com pizza',
+    'mai pelo Zap',
+    'Não ! Eu não quero loja virtual , Eu teho uma pequena Pizzaria !'
+  ]);
+  assert.equal(pizzaria.lead.name, 'Marcos');
+  assert.equal(pizzaria.lead.channel, 'WhatsApp');
+  assert.ok(includesAny(pizzaria.lead.product || '', ['pizza']));
+  assert.ok(!includesAny(pizzaria.replies[1], ['lojas virtuais parece', 'estrutura mais completa']));
+  assert.ok(includesAny(pizzaria.replies[1], ['zap', 'cardapio', 'whatsapp']));
+  assert.ok(!includesAny(pizzaria.replies[2], ['lojas virtuais parece', 'quer começar rapido']));
+  assert.ok(includesAny(pizzaria.replies[2], ['pizzaria', 'nao vou insistir', 'whatsapp']));
+
   console.log('Atendimento context regression tests passed.');
 })();
