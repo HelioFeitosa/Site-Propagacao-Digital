@@ -50,7 +50,7 @@ function readClipboard() {
   await run('cmd', ['/c', 'vercel', 'env', 'add', 'OPENAI_API_KEY', 'production', '--scope', scope], { input: `${key}\n` });
 
   await run('cmd', ['/c', 'vercel', 'env', 'rm', 'OPENAI_MODEL', 'production', '--yes', '--scope', scope]).catch(() => {});
-  await run('cmd', ['/c', 'vercel', 'env', 'add', 'OPENAI_MODEL', 'production', '--scope', scope], { input: 'gpt-5-mini\n' });
+  await run('cmd', ['/c', 'vercel', 'env', 'add', 'OPENAI_MODEL', 'production', '--scope', scope], { input: 'gpt-5.4-mini\n' });
 
   console.log('Publicando com a chave tambem injetada diretamente neste deploy...');
   await run('cmd', [
@@ -64,7 +64,7 @@ function readClipboard() {
     '-e',
     `OPENAI_API_KEY=${key}`,
     '-e',
-    'OPENAI_MODEL=gpt-5-mini'
+    'OPENAI_MODEL=gpt-5.4-mini'
   ], {
     env: { ...process.env, VERCEL_TELEMETRY_DISABLED: '1' }
   });

@@ -1,5 +1,5 @@
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const MODEL = process.env.OPENAI_MODEL || 'gpt-5-mini';
+const MODEL = process.env.OPENAI_MODEL || 'gpt-5.4-mini';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 const ALLOW_GEMINI_FALLBACK = process.env.ALLOW_GEMINI_FALLBACK === 'true';
@@ -1104,7 +1104,7 @@ module.exports = async function handler(req, res) {
     const lead = updateLead(body.lead || {}, messages);
     nextLead = lead;
     let reply = '';
-    let provider = 'fallback';
+    let provider = OPENAI_API_KEY ? 'fallback' : 'missing-openai-key';
 
     if (OPENAI_API_KEY) {
       try {
@@ -1113,11 +1113,13 @@ module.exports = async function handler(req, res) {
       } catch (error) {
         console.error('[pd-atendimento-ai]', error.message);
       }
+    } else {
+      console.error('[pd-atendimento-ai] OPENAI_API_KEY ausente no runtime');
     }
 
     if (!reply) {
       reply = priorityReply(lead, messages[messages.length - 1]?.content || '', messages);
-      if (reply) provider = 'rules';
+      if (reply && provider !== 'missing-openai-key') provider = 'rules';
     }
 
     if (!reply && GEMINI_API_KEY && ALLOW_GEMINI_FALLBACK) {
