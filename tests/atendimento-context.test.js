@@ -130,5 +130,17 @@ function includesAny(text, words) {
   assert.ok(includesAny(offTopic.replies.at(-1), ['chatgpt', 'site', 'google']));
   assert.ok(!includesAny(offTopic.replies.at(-1), ['estrutura simples ou completa']));
 
+  const oficina = await runFlow([
+    'Meu nome é Renato e tenho uma oficina de bicicletas. Quero aumentar clientes e organizar orçamento pelo WhatsApp. Qual caminho você recomenda sem repetir perguntas?'
+  ]);
+  assert.equal(oficina.lead.name, 'Renato');
+  assert.equal(oficina.lead.businessType, 'oficina de bicicletas');
+  assert.ok(includesAny(oficina.lead.product || '', ['conserto', 'manutencao', 'bicicletas']));
+  assert.equal(oficina.lead.channel, 'WhatsApp');
+  assert.ok(!oficina.lead.location);
+  assert.ok(!includesAny(oficina.replies.at(-1), ['voce vende oficina', 'principais oficina', 'vender pelo whatsapp tambem']));
+  assert.ok(!includesAny(oficina.replies.at(-1), ['em de bicicletas']));
+  assert.ok(includesAny(oficina.replies.at(-1), ['whatsapp', 'google local', 'servicos']));
+
   console.log('Atendimento context regression tests passed.');
 })();

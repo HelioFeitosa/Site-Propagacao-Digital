@@ -143,7 +143,11 @@ const businessProductRules = [
   { pattern: /pizzaria/, business: 'pizzaria', product: 'pizzas' },
   { pattern: /hamburgueria|lanchonete/, business: 'lanchonete', product: 'lanches' },
   { pattern: /loja de roupa|loja de roupas/, business: 'loja de roupas', product: 'roupas' },
-  { pattern: /loja de colchao|loja de colchões|loja de colchoes/, business: 'loja de colchões', product: 'colchões' }
+  { pattern: /loja de colchao|loja de colchões|loja de colchoes/, business: 'loja de colchões', product: 'colchões' },
+  { pattern: /oficina de bicicleta|oficina de bicicletas|bicicletaria/, business: 'oficina de bicicletas', product: 'serviços de conserto e manutenção de bicicletas' },
+  { pattern: /barbearia/, business: 'barbearia', product: 'serviços de corte e barba' },
+  { pattern: /salao de beleza|salão de beleza/, business: 'salão de beleza', product: 'serviços de beleza' },
+  { pattern: /clinica|clínica/, business: 'clínica', product: 'serviços de atendimento' }
 ];
 
 function inferBusinessProduct(text) {
@@ -156,6 +160,25 @@ function inferBusinessProduct(text) {
 function isKnownBusinessType(value) {
   const normalized = normalizeForMatch(value);
   return businessProductRules.some((item) => item.pattern.test(normalized));
+}
+
+function cleanLocationCandidate(value) {
+  const location = cleanText(value, 80);
+  const normalized = normalizeForMatch(location);
+  if (!location || location.length < 3) return '';
+  if (hasAny(normalized, [
+    /^de /,
+    /bicicleta/,
+    /bicicletas/,
+    /sapatos/,
+    /colchoes/,
+    /colchões/,
+    /servicos/,
+    /serviços/,
+    /manutencao/,
+    /manutenção/
+  ])) return '';
+  return location;
 }
 
 function extractProductCorrection(text) {
@@ -442,7 +465,8 @@ function updateLead(lead, messages) {
   }
 
   const locationMatch = allUserText.match(/(?:no meu ponto no|no ponto no|no bairro|em|na)\s+([A-Za-zÀ-ÿ0-9\s'-]{3,40})(?:!|\.|,|\n|$)/i);
-  if (locationMatch) next.location = cleanText(locationMatch[1], 80);
+  const locationCandidate = cleanLocationCandidate((locationMatch || [])[1]);
+  if (locationCandidate) next.location = locationCandidate;
 
   if (hasAny(normalizedLast, [/acai|maniçoba|manicoba|marmita|tacaca|tacacá|comida|lanche|bairro|bairo|delivery|produto|servico/])) {
     next.business = cleanText(lastUser, 180);
@@ -837,6 +861,10 @@ function priorityReply(lead, lastUserText = '', messages = []) {
   if (lead.product && hasAny(last, [/vendo|venda|tenho|trabalho com|meu ponto|minha loja|loja fisica|loja física/])) {
     const name = lead.name ? `${lead.name}, ` : '';
     const locationText = lead.location ? ` em ${lead.location}` : '';
+    if (lead.channel === 'WhatsApp') {
+      return `${name}entendi.\n\nVocê trabalha com ${productLabel(lead)}${locationText}.\n\nComo você já falou em WhatsApp, eu não vou perguntar isso de novo.\n\nEu começaria com uma estrutura direta:\n1. página simples explicando seus serviços;\n2. botão para orçamento no WhatsApp;\n3. Google local para quem procura perto;\n4. anúncios para pessoas da sua região.\n\nO próximo passo é destacar os serviços que mais trazem lucro ou mais procura.`;
+    }
+
     return `${name}entendi.\n\nVocê vende ${productLabel(lead)} no seu ponto físico${locationText}.\n\nNesse caso, eu não começaria falando de loja virtual completa.\n\nEu começaria com uma estrutura mais direta:\n1. página simples mostrando seus principais ${productLabel(lead)};\n2. botão para chamar no WhatsApp;\n3. Google/SEO local para quem procura perto de você;\n4. anúncios no bairro para levar gente até o seu ponto.\n\nSeu objetivo principal é levar mais pessoas para a loja ou vender pelo WhatsApp também?`;
   }
 
