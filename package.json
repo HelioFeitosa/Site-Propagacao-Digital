@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "npx serve .",
-    "build": "node -e \"console.log('Static site: no build step required')\""
+    "build": "node -e \"console.log('Static site: no build step required')\"",
+    "test": "node tests/atendimento-context.test.js"
   }
 }

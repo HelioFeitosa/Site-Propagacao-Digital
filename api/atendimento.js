@@ -126,6 +126,50 @@ function extractFoodProduct(text) {
   return '';
 }
 
+function cleanProductPhrase(value) {
+  return cleanText(value, 120)
+    .split(/\b(?:no meu bairro|no bairro|no meu ponto|na minha loja|na minha cidade|pelo whatsapp|no whatsapp|whatsapp|instagram|facebook|google)\b/i)[0]
+    .replace(/\b(?:eu vendo|vendo|venda|tenho|trabalho com|faco|faço|mais|online|todo dia|todos os dias)\b/gi, '')
+    .replace(/^[,.;:\s]+/, '')
+    .replace(/\b(?:uma|um|a|o|as|os)\s+/i, '')
+    .trim();
+}
+
+const businessProductRules = [
+  { pattern: /sapataria/, business: 'sapataria', product: 'sapatos' },
+  { pattern: /padaria/, business: 'padaria', product: 'pães' },
+  { pattern: /acougue|açougue/, business: 'açougue', product: 'carnes' },
+  { pattern: /pizzaria/, business: 'pizzaria', product: 'pizzas' },
+  { pattern: /hamburgueria|lanchonete/, business: 'lanchonete', product: 'lanches' },
+  { pattern: /loja de roupa|loja de roupas/, business: 'loja de roupas', product: 'roupas' },
+  { pattern: /loja de colchao|loja de colchões|loja de colchoes/, business: 'loja de colchões', product: 'colchões' }
+];
+
+function inferBusinessProduct(text) {
+  const normalized = normalizeForMatch(text);
+  const rule = businessProductRules.find((item) => item.pattern.test(normalized));
+  if (!rule) return null;
+  return { businessType: rule.business, product: rule.product };
+}
+
+function isKnownBusinessType(value) {
+  const normalized = normalizeForMatch(value);
+  return businessProductRules.some((item) => item.pattern.test(normalized));
+}
+
+function extractProductCorrection(text) {
+  const value = cleanText(text, 220);
+  const correction = value.match(/n(?:ão|ao)\s+vendo\s+.+?,?\s*(?:eu\s+)?vendo\s+(.+?)(?:!|\.|$)/i);
+  if (correction) return cleanProductPhrase(correction[1]);
+
+  const explicit = value.match(/(?:o produto|meu produto|eu vendo|vendo)\s+(?:é|e|são|sao)?\s*(.+?)(?:!|\.|$)/i);
+  if (explicit && /n(?:ão|ao)\s+vendo|corrigindo|na verdade|produto/i.test(value)) {
+    return cleanProductPhrase(explicit[1]);
+  }
+
+  return '';
+}
+
 function productLabel(lead) {
   return lead.productDetail || lead.product || 'seu produto';
 }
@@ -370,6 +414,13 @@ function updateLead(lead, messages) {
     .filter((message) => message.role === 'user')
     .map((message) => message.content);
 
+  const inferredBusiness = [...userMessages].reverse().map((text) => inferBusinessProduct(text)).find(Boolean);
+  if (inferredBusiness) {
+    next.businessType = inferredBusiness.businessType;
+    next.product = inferredBusiness.product;
+    next.business = next.business || `tem ${inferredBusiness.businessType}`;
+  }
+
   const productBusinessCandidate = [...userMessages]
     .reverse()
     .find((text) => text.length > 8 && /(açaí|acai|maniçoba|manicoba|marmita|tacacá|tacaca|bairro|bairo|delivery|produto|comida|lanchonete|restaurante|loja)/i.test(text));
@@ -380,8 +431,14 @@ function updateLead(lead, messages) {
 
   if (businessCandidate) next.business = cleanText(businessCandidate, 180);
 
-  const productFromConversation = [...userMessages].reverse().map((text) => extractFoodProduct(text)).find(Boolean);
-  if (productFromConversation) next.product = productFromConversation;
+  const correctedProduct = extractProductCorrection(lastUser);
+  if (correctedProduct) {
+    next.product = correctedProduct;
+    delete next.productDetail;
+  } else {
+    const productFromConversation = [...userMessages].reverse().map((text) => extractFoodProduct(text)).find(Boolean);
+    if (productFromConversation && !isKnownBusinessType(productFromConversation)) next.product = cleanProductPhrase(productFromConversation);
+  }
 
   const locationMatch = allUserText.match(/(?:no meu ponto no|no ponto no|no bairro|em|na)\s+([A-Za-zÀ-ÿ0-9\s'-]{3,40})(?:!|\.|,|\n|$)/i);
   if (locationMatch) next.location = cleanText(locationMatch[1], 80);
@@ -729,6 +786,17 @@ function priorityReply(lead, lastUserText = '', messages = []) {
     return `${name}perfeito, WhatsApp anotado.\n\nEntão o caminho mais simples é:\n1. página/oferta com fotos reais de ${productLabel(lead)};\n2. botão direto para chamar no WhatsApp;\n3. mensagem pronta para o cliente pedir orçamento;\n4. anúncio local levando direto para essa conversa.\n\nAgora preciso saber:\nvocê quer receber pedidos/orçamentos pelo seu WhatsApp pessoal ou por um número da empresa?`;
   }
 
+  if (extractProductCorrection(lastUserText)) {
+    const name = lead.name ? `${lead.name}, ` : '';
+    const business = lead.businessType ? `\n\nVocê tem uma ${lead.businessType}.` : '';
+    return `${name}agora entendi corretamente.${business}\n\nO produto que você vende é ${productLabel(lead)}.\n\nNão vou tratar ${lead.businessType || 'o tipo de negócio'} como produto.\n\nPara vender mais ${productLabel(lead)}, o caminho certo é:\n1. página simples com fotos reais;\n2. botão direto para WhatsApp;\n3. Google local para quem procura perto;\n4. anúncios para atrair cliente interessado.`;
+  }
+
+  if (lead.businessType && lead.product && hasAny(last, [/voce entende/, /você entende/, /sapataria vende/, /padaria vende/, /acougue vende/, /açougue vende/])) {
+    const name = lead.name ? `${lead.name}, ` : '';
+    return `${name}sim, entendi.\n\n${lead.businessType.charAt(0).toUpperCase() + lead.businessType.slice(1)} é o tipo de negócio.\n${productLabel(lead)} é o produto vendido.\n\nA partir daqui vou falar de venda de ${productLabel(lead)}, não de vender a ${lead.businessType}.\n\nPara o seu caso, eu faria uma estrutura simples com WhatsApp, Google local e anúncios no bairro.`;
+  }
+
   if (isFrustrated(lastUserText)) {
     const known = [];
     if (lead.name) known.push(`seu nome é ${lead.name}`);
@@ -898,7 +966,7 @@ function fallbackReply(lead, lastUserText = '', messages = []) {
     return 'Tráfego pago funciona melhor quando não é só impulsionar post.\nO ideal é ter uma oferta clara, uma página ou WhatsApp bem preparado, campanha segmentada e acompanhamento para ajustar o que traz cliente de verdade.\n\nVocê já anuncia hoje ou vai começar do zero?';
   }
 
-  if (hasAny(last, [/atendente|chatbot|robo|agente|responder cliente|qualificar lead|whatsapp/])) {
+  if (hasAny(last, [/atendente|chatbot|robo|agente|responder cliente|qualificar lead/])) {
     return 'Um agente de atendimento pode responder dúvidas, entender o que o cliente precisa, qualificar o lead e encaminhar para o WhatsApp com contexto.\n\nO ponto principal é ele conhecer bem o seu negócio e não ficar preso em respostas secas.\n\nHoje você recebe mais contatos pelo WhatsApp, Instagram ou pelo site?';
   }
 
