@@ -3,6 +3,7 @@
 
   const WHATSAPP_NUMBER = '5591987137397';
   const STORAGE_KEY = 'pd-assistente-helio-v2';
+  const VISITOR_KEY = 'pd-assistente-visitor-v1';
   const API_ENDPOINT = '/api/atendimento';
   const TYPING_APPEAR_DELAY_MS = 3000;
   const RESPONSE_DELAY_MS = 10000;
@@ -60,6 +61,17 @@
     ready: false
   };
 
+  function loadVisitorId() {
+    const saved = localStorage.getItem(VISITOR_KEY);
+    if (/^[a-zA-Z0-9_-]{16,80}$/.test(saved || '')) return saved;
+
+    const generated = window.crypto?.randomUUID
+      ? window.crypto.randomUUID().replaceAll('-', '')
+      : `pd${Date.now()}${Math.random().toString(36).slice(2, 18)}`;
+    localStorage.setItem(VISITOR_KEY, generated);
+    return generated;
+  }
+
   function loadConversation() {
     try {
       const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
@@ -79,6 +91,7 @@
     }));
   }
 
+  const visitorId = loadVisitorId();
   let { lead, messages: chatMessages } = loadConversation();
   let isSending = false;
 
@@ -132,7 +145,7 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 20.5 3l-5.8 18-3.2-7-8.5-2.5Zm8.5 2.5 9-11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </form>
-        <p class="pd-assistant-privacy">O Hélio usa a conversa para entender seu objetivo e encaminhar o atendimento pelo WhatsApp.</p>
+        <p class="pd-assistant-privacy">O Hélio guarda um resumo comercial por até 12 meses para continuar seu atendimento. Para apagar, escreva “esqueça meus dados”.</p>
       </section>
     `;
     document.body.appendChild(root);
@@ -308,6 +321,7 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        visitorId,
         lead,
         messages: chatMessages.slice(-18),
         page: document.title,

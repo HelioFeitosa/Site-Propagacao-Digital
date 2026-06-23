@@ -3,6 +3,15 @@ const MODEL = process.env.OPENAI_MODEL || 'gpt-5.4-mini';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 const ALLOW_GEMINI_FALLBACK = process.env.ALLOW_GEMINI_FALLBACK === 'true';
+const {
+  extractRecallIdentity,
+  findReturningMemory,
+  forgetClientMemory,
+  isForgetRequest,
+  loadVisitorMemory,
+  saveClientMemory,
+  safeVisitorId
+} = require('../lib/client-memory');
 
 const rateLimit = new Map();
 
@@ -640,7 +649,9 @@ Objetivo:
 - Se o cliente disser que quer vender online, vender todo dia, vender no bairro, vender açaí, comida, produtos ou delivery, priorize uma estrutura de venda online/local: loja virtual simples, cardápio/página de pedidos, WhatsApp, tráfego pago e SEO local. Não recomende Automação com IA como primeira solução nesses casos.
 - Antes de fazer uma pergunta, leia a memória consolidada e o histórico. Nunca pergunte de novo algo que o cliente já respondeu.
 - Se uma informação já foi dada, use essa informação e avance para a próxima etapa lógica.
-- Se o cliente perguntar se você lembra de uma conversa feita no celular, WhatsApp, outro aparelho ou outra sessão, seja honesto: você só vê o histórico enviado nesta conversa atual. Não finja lembrar. Peça um resumo curto e continue.
+- Se o estado indicar "cliente reconhecido", diga de forma natural que lembra dele, use o resumo anterior e continue do ponto em que pararam.
+- Se não houver memória recuperada, seja honesto e peça nome + negócio para tentar localizar. Nunca finja lembrar.
+- Ao reconhecer alguém, não revele telefone, pagamento, senha ou qualquer dado sensível. Use apenas nome, negócio e status comercial.
 - Se o cliente responder "simples", "rápido", "simples pra vender rápido" ou "completo", aceite como resposta sobre o tipo de estrutura e avance para plano/WhatsApp. Não repita a pergunta sobre estrutura simples ou completa.
 - Se o cliente disser que vende "açaí em litro", "polpa", "in natura" ou corrigir que não vende copos/tamanhos, aceite isso como detalhe do produto. Não pergunte novamente quais tamanhos vende. Avance para preço, bairros de entrega, fotos ou oferta.
 - Faça no máximo uma pergunta por resposta.
@@ -689,6 +700,9 @@ Entrega/delivery já citado: ${lead.delivery || 'não informado'}
 Horário de venda já citado: ${lead.peakPeriod || 'não informado'}
 Urgência: ${lead.urgency || 'não informada'}
 Investimento/valor citado: ${lead.budget || 'não informado'}
+Cliente reconhecido de conversa anterior: ${lead.returningClient ? 'sim' : 'não'}
+Último contato salvo: ${lead.memoryLastContact || 'não disponível'}
+Resumo comercial anterior: ${lead.previousSummary || 'não disponível'}
 Página atual: ${page || path || 'site'}
 
 Memória consolidada da conversa:
@@ -806,6 +820,10 @@ function priorityReply(lead, lastUserText = '', messages = []) {
     .filter((message) => message.role === 'user')
     .map((message) => message.content)
     .join('\n'));
+
+  if (lead.returningClient && lead.previousSummary && extractRecallIdentity(lastUserText)) {
+    return `Oi, ${lead.name}! Lembro sim.\n\nNo nosso último contato ficou registrado:\n${lead.previousSummary}.\n\nVamos continuar desse ponto.\nO que mudou desde aquela conversa?`;
+  }
 
   if (isAiIdentityQuestion(lastUserText)) {
     return 'Sou o Hélio, atendente virtual da Propagação Digital.\n\nEu uso inteligência artificial para entender sua mensagem e te orientar melhor.\n\nMas eu preciso responder com clareza e manter o contexto do que você já falou.\n\nPode perguntar direto que eu respondo.';
@@ -1101,7 +1119,52 @@ module.exports = async function handler(req, res) {
       })).filter((message) => message.content)
       : [];
 
-    const lead = updateLead(body.lead || {}, messages);
+    const lastUserText = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
+    const visitorId = safeVisitorId(body.visitorId);
+
+    if (isForgetRequest(lastUserText)) {
+      await forgetClientMemory(visitorId).catch((error) => {
+        console.error('[pd-client-memory-forget]', error.message);
+      });
+
+      return sendJson(res, 200, {
+        reply: 'Pronto.\n\nApaguei a memória comercial associada a este navegador.\n\nSe você voltar depois, começaremos um novo atendimento.',
+        lead: {},
+        provider: 'memory',
+        memory: { forgotten: true }
+      });
+    }
+
+    const clientLead = { ...(body.lead || {}) };
+    delete clientLead.returningClient;
+    delete clientLead.previousSummary;
+    delete clientLead.memoryLastContact;
+
+    let storedMemory = null;
+    let recalledMemory = null;
+
+    try {
+      storedMemory = await loadVisitorMemory(visitorId);
+      const recallIdentity = extractRecallIdentity(lastUserText);
+      if (recallIdentity) {
+        recalledMemory = await findReturningMemory(recallIdentity.name, recallIdentity.businessHint);
+      }
+    } catch (error) {
+      console.error('[pd-client-memory-load]', error.message);
+    }
+
+    const activeMemory = recalledMemory || storedMemory;
+    const lead = updateLead({
+      ...(activeMemory?.lead || {}),
+      ...clientLead
+    }, messages);
+
+    if (recalledMemory) {
+      lead.returningClient = true;
+      lead.previousSummary = cleanText(recalledMemory.summary, 700);
+      lead.memoryLastContact = cleanText(recalledMemory.updatedAt, 80);
+    }
+
     nextLead = lead;
     let reply = '';
     let provider = OPENAI_API_KEY ? 'fallback' : 'missing-openai-key';
@@ -1136,12 +1199,26 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const finalReply = formatForChatReadability(reply || fallbackReply(lead, messages[messages.length - 1]?.content || '', messages));
+    const finalReply = formatForChatReadability(reply || fallbackReply(lead, lastUserText, messages));
+    let memorySaved = false;
+
+    try {
+      memorySaved = await saveClientMemory(visitorId, lead, [
+        ...messages,
+        { role: 'assistant', content: finalReply }
+      ]);
+    } catch (error) {
+      console.error('[pd-client-memory-save]', error.message);
+    }
 
     return sendJson(res, 200, {
       reply: finalReply,
       lead,
-      provider
+      provider,
+      memory: {
+        recognized: Boolean(recalledMemory),
+        saved: memorySaved
+      }
     });
   } catch (error) {
     console.error('[pd-atendimento]', error);
