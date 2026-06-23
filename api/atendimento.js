@@ -8,8 +8,8 @@ const {
   findReturningMemory,
   forgetClientMemory,
   isForgetRequest,
+  linkVisitorMemory,
   loadVisitorMemory,
-  memoryConfiguration,
   saveClientMemory,
   safeVisitorId
 } = require('../lib/client-memory');
@@ -1170,6 +1170,9 @@ module.exports = async function handler(req, res) {
       lead.returningClient = true;
       lead.previousSummary = cleanText(recalledMemory.summary, 700);
       lead.memoryLastContact = cleanText(recalledMemory.updatedAt, 80);
+      await linkVisitorMemory(visitorId, recalledMemory.visitorId).catch((error) => {
+        console.error('[pd-client-memory-link]', error.message);
+      });
     } else if (extractRecallIdentity(lastUserText)) {
       lead.recallNotFound = true;
     }
@@ -1226,8 +1229,7 @@ module.exports = async function handler(req, res) {
       provider,
       memory: {
         recognized: Boolean(recalledMemory),
-        saved: memorySaved,
-        configuration: memoryConfiguration()
+        saved: memorySaved
       }
     });
   } catch (error) {
