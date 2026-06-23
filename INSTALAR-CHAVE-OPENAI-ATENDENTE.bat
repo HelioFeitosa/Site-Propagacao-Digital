@@ -13,7 +13,7 @@ if errorlevel 1 goto fail
 
 echo.
 echo OK: chave instalada e site publicado.
-echo Agora rode o teste no site: https://propagacao-digital.vercel.app
+echo Agora rode o teste no site: https://propagacaodigital.com
 pause
 exit /b 0
 
