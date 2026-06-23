@@ -9,6 +9,7 @@ const {
   forgetClientMemory,
   isForgetRequest,
   loadVisitorMemory,
+  memoryConfiguration,
   saveClientMemory,
   safeVisitorId
 } = require('../lib/client-memory');
@@ -651,6 +652,7 @@ Objetivo:
 - Se uma informação já foi dada, use essa informação e avance para a próxima etapa lógica.
 - Se o estado indicar "cliente reconhecido", diga de forma natural que lembra dele, use o resumo anterior e continue do ponto em que pararam.
 - Se não houver memória recuperada, seja honesto e peça nome + negócio para tentar localizar. Nunca finja lembrar.
+- Se o estado indicar "memória procurada e não encontrada", diga claramente que não encontrou um registro confirmado. Nunca responda "lembro sim".
 - Ao reconhecer alguém, não revele telefone, pagamento, senha ou qualquer dado sensível. Use apenas nome, negócio e status comercial.
 - Se o cliente responder "simples", "rápido", "simples pra vender rápido" ou "completo", aceite como resposta sobre o tipo de estrutura e avance para plano/WhatsApp. Não repita a pergunta sobre estrutura simples ou completa.
 - Se o cliente disser que vende "açaí em litro", "polpa", "in natura" ou corrigir que não vende copos/tamanhos, aceite isso como detalhe do produto. Não pergunte novamente quais tamanhos vende. Avance para preço, bairros de entrega, fotos ou oferta.
@@ -701,6 +703,7 @@ Horário de venda já citado: ${lead.peakPeriod || 'não informado'}
 Urgência: ${lead.urgency || 'não informada'}
 Investimento/valor citado: ${lead.budget || 'não informado'}
 Cliente reconhecido de conversa anterior: ${lead.returningClient ? 'sim' : 'não'}
+Memória procurada e não encontrada: ${lead.recallNotFound ? 'sim' : 'não'}
 Último contato salvo: ${lead.memoryLastContact || 'não disponível'}
 Resumo comercial anterior: ${lead.previousSummary || 'não disponível'}
 Página atual: ${page || path || 'site'}
@@ -823,6 +826,10 @@ function priorityReply(lead, lastUserText = '', messages = []) {
 
   if (lead.returningClient && lead.previousSummary && extractRecallIdentity(lastUserText)) {
     return `Oi, ${lead.name}! Lembro sim.\n\nNo nosso último contato ficou registrado:\n${lead.previousSummary}.\n\nVamos continuar desse ponto.\nO que mudou desde aquela conversa?`;
+  }
+
+  if (lead.recallNotFound && extractRecallIdentity(lastUserText)) {
+    return `Oi, ${lead.name || 'meu amigo'}.\n\nProcurei pelo nome e pelo negócio informado, mas não encontrei um registro confirmado ainda.\n\nMe diga em uma frase onde paramos, que eu continuo daqui e salvo corretamente para a próxima vez.`;
   }
 
   if (isAiIdentityQuestion(lastUserText)) {
@@ -1163,6 +1170,8 @@ module.exports = async function handler(req, res) {
       lead.returningClient = true;
       lead.previousSummary = cleanText(recalledMemory.summary, 700);
       lead.memoryLastContact = cleanText(recalledMemory.updatedAt, 80);
+    } else if (extractRecallIdentity(lastUserText)) {
+      lead.recallNotFound = true;
     }
 
     nextLead = lead;
@@ -1217,7 +1226,8 @@ module.exports = async function handler(req, res) {
       provider,
       memory: {
         recognized: Boolean(recalledMemory),
-        saved: memorySaved
+        saved: memorySaved,
+        configuration: memoryConfiguration()
       }
     });
   } catch (error) {
