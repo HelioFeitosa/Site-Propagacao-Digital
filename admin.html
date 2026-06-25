@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Painel Comercial | Propagacao Digital</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="admin-page">
+  <main class="admin-shell">
+    <section class="admin-hero">
+      <div>
+        <span class="eyebrow">Painel interno</span>
+        <h1>Atendimento e vendas</h1>
+        <p>Leads do Hélio, resumo comercial e tabela de serviços para negociar com mais contexto.</p>
+      </div>
+      <a class="btn-secondary" href="/">Voltar ao site</a>
+    </section>
+
+    <section class="admin-login" id="adminLogin">
+      <h2>Acesso protegido</h2>
+      <p>Informe a chave interna para carregar os dados comerciais.</p>
+      <form id="adminTokenForm">
+        <input id="adminToken" type="password" autocomplete="off" placeholder="Chave do painel" />
+        <button class="btn-primary" type="submit">Entrar</button>
+      </form>
+      <small>Nenhuma conversa é exibida sem a chave.</small>
+    </section>
+
+    <section class="admin-grid" id="adminContent" hidden>
+      <article class="admin-panel admin-panel-wide">
+        <div class="admin-panel-head">
+          <div>
+            <span class="eyebrow">Leads</span>
+            <h2>Conversas salvas</h2>
+          </div>
+          <button class="btn-secondary" id="refreshLeads" type="button">Atualizar</button>
+        </div>
+        <div class="admin-leads" id="adminLeads"></div>
+      </article>
+
+      <article class="admin-panel">
+        <span class="eyebrow">Negociação</span>
+        <h2>Tabela de serviços</h2>
+        <div class="admin-services" id="adminServices"></div>
+      </article>
+    </section>
+  </main>
+  <script src="/admin.js" defer></script>
+</body>
+</html>

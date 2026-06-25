@@ -1554,6 +1554,53 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   color: var(--color-accent);
 }
 
+.pd-assistant-visual {
+  align-self: flex-start;
+  width: min(88%, 360px);
+  overflow: hidden;
+  border: 1px solid rgba(0, 255, 136, 0.22);
+  border-radius: 10px;
+  background: #101612;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+  animation: pd-message-in 220ms ease both;
+}
+
+.pd-assistant-visual img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: #070b09;
+}
+
+.pd-assistant-visual div {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.8rem 0.85rem 0.9rem;
+}
+
+.pd-assistant-visual span {
+  width: fit-content;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pd-assistant-visual strong {
+  color: #f5fff9;
+  font-size: 0.9rem;
+}
+
+.pd-assistant-visual p {
+  margin: 0;
+  color: rgba(245, 245, 245, 0.68);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
 .pd-assistant-typing {
   display: inline-flex;
   align-items: baseline;
@@ -1739,6 +1786,186 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 @keyframes bounce-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
+}
+
+/* === Admin comercial === */
+.admin-page {
+  min-height: 100vh;
+  background: #050706;
+}
+
+.admin-shell {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 3rem 0;
+}
+
+.admin-hero,
+.admin-login,
+.admin-panel {
+  border: 1px solid rgba(0, 255, 136, 0.18);
+  border-radius: 10px;
+  background: #0c100e;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+}
+
+.admin-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.admin-hero h1,
+.admin-login h2,
+.admin-panel h2 {
+  margin: 0;
+}
+
+.admin-hero p,
+.admin-login p,
+.admin-empty {
+  margin: 0.75rem 0 0;
+  color: rgba(245, 245, 245, 0.68);
+}
+
+.admin-login {
+  max-width: 620px;
+  margin: 1.2rem 0 0;
+  padding: 1.5rem;
+}
+
+.admin-login form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.admin-login input {
+  min-height: 46px;
+  min-width: 0;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: #070b09;
+  color: var(--color-text);
+  font: inherit;
+  outline: none;
+}
+
+.admin-login input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.08);
+}
+
+.admin-login small {
+  display: block;
+  margin-top: 0.85rem;
+  color: rgba(245, 245, 245, 0.45);
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.75fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.admin-panel {
+  padding: 1.35rem;
+}
+
+.admin-panel-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-leads,
+.admin-services {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.admin-lead,
+.admin-service {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: #111713;
+}
+
+.admin-lead > div:first-child {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.admin-lead strong,
+.admin-service strong {
+  color: #f7fff9;
+  font-size: 1rem;
+}
+
+.admin-lead span,
+.admin-lead p,
+.admin-service p,
+.admin-service small {
+  color: rgba(245, 245, 245, 0.66);
+}
+
+.admin-lead p,
+.admin-service p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.admin-lead dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.admin-lead dl div {
+  padding: 0.65rem;
+  border-radius: 8px;
+  background: rgba(0, 255, 136, 0.04);
+}
+
+.admin-lead dt {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-lead dd {
+  margin: 0.22rem 0 0;
+  color: rgba(245, 245, 245, 0.78);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 860px) {
+  .admin-hero,
+  .admin-login form,
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-hero {
+    display: grid;
+  }
+
+  .admin-lead dl {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* === Animações === */

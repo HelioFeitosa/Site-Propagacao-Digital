@@ -51,6 +51,39 @@
     }
   };
 
+  const visualExamples = {
+    pizzaria: {
+      id: 'pizzaria',
+      title: 'Exemplo visual para pizzaria',
+      image: '/img/exemplo-pizzaria.svg',
+      text: 'Cardapio, combos, oferta do dia e botao direto para pedido no WhatsApp.'
+    },
+    cardapio: {
+      id: 'cardapio',
+      title: 'Exemplo de cardapio digital',
+      image: '/img/exemplo-cardapio-digital.svg',
+      text: 'O cliente escolhe os itens, informa entrega e envia o pedido organizado no WhatsApp.'
+    },
+    loja: {
+      id: 'loja',
+      title: 'Exemplo de loja virtual',
+      image: '/img/exemplo-loja-virtual.svg',
+      text: 'Produtos organizados, vitrine, carrinho e caminho simples para comprar pelo celular.'
+    },
+    servico: {
+      id: 'servico',
+      title: 'Exemplo para servico local',
+      image: '/img/exemplo-servico-local.svg',
+      text: 'Pagina focada em confianca, Google local, prova social e pedido de orcamento.'
+    },
+    site: {
+      id: 'site',
+      title: 'Exemplo de site profissional',
+      image: '/img/exemplo-site-profissional.svg',
+      text: 'Apresentacao clara da empresa, servicos, autoridade e chamada para WhatsApp.'
+    }
+  };
+
   const initialLead = {
     name: '',
     business: '',
@@ -106,6 +139,13 @@
 
   function nl2br(value) {
     return escapeHtml(value).replace(/\n/g, '<br>');
+  }
+
+  function normalizeMatch(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
   }
 
   function injectInterface() {
@@ -208,6 +248,21 @@
     messages.scrollTop = messages.scrollHeight;
   }
 
+  function addVisualToDom(example) {
+    const card = document.createElement('article');
+    card.className = 'pd-assistant-visual';
+    card.innerHTML = `
+      <img src="${escapeHtml(example.image)}" alt="${escapeHtml(example.title)}" loading="lazy" />
+      <div>
+        <span>modelo visual</span>
+        <strong>${escapeHtml(example.title)}</strong>
+        <p>${escapeHtml(example.text)}</p>
+      </div>
+    `;
+    messages.appendChild(card);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
   function renderConversation() {
     messages.innerHTML = '';
     options.innerHTML = '';
@@ -218,6 +273,11 @@
     }
 
     chatMessages.forEach((message) => {
+      if (message.type === 'visual' && visualExamples[message.visualId]) {
+        addVisualToDom(visualExamples[message.visualId]);
+        return;
+      }
+
       addMessageToDom(message.content, message.role === 'user' ? 'user' : 'bot');
     });
 
@@ -272,6 +332,35 @@
     options.appendChild(button);
   }
 
+  function selectVisualExample(userText, replyText) {
+    const combined = normalizeMatch([
+      userText,
+      replyText,
+      lead.business,
+      lead.goal,
+      lead.product,
+      lead.service
+    ].filter(Boolean).join(' '));
+
+    const askedForVisual = /(exemplo|modelo|imagem|foto|visual|como fica|mostrar|cardapio|cardapio digital|loja virtual|site)/.test(combined);
+    const hasContext = Boolean(lead.business || lead.product || lead.service);
+    if (!askedForVisual && !hasContext) return null;
+
+    let id = 'site';
+    if (/(pizza|pizzaria|esfiha|hamburg|lanche|delivery|marmita)/.test(combined)) id = 'pizzaria';
+    else if (/(acai|comida|cardapio|pedido|delivery|marmita|lanche)/.test(combined)) id = 'cardapio';
+    else if (/(loja virtual|ecommerce|e-commerce|produto|roupa|calcado|sapato|colch|toner|cartucho|catalogo|vender online)/.test(combined)) id = 'loja';
+    else if (/(barbearia|salao|clinica|oficina|assistencia|servico|orcamento|prestador|consultorio)/.test(combined)) id = 'servico';
+    else if (lead.service === 'lojas') id = 'loja';
+    else if (lead.service === 'landing') id = 'cardapio';
+    else if (lead.service === 'sites' || lead.service === 'seo') id = 'site';
+
+    const alreadyShown = chatMessages.some((message) => message.type === 'visual' && message.visualId === id);
+    if (alreadyShown) return null;
+
+    return visualExamples[id];
+  }
+
   async function submitMessage(text) {
     const content = text.trim();
     if (!content || isSending) return;
@@ -300,11 +389,21 @@
       chatMessages.push({ role: 'assistant', content: reply });
       if (typing) typing.remove();
       addMessageToDom(reply, 'bot');
+      const visual = selectVisualExample(content, reply);
+      if (visual) {
+        chatMessages.push({ role: 'assistant', type: 'visual', visualId: visual.id, content: `Exemplo visual mostrado: ${visual.title}` });
+        addVisualToDom(visual);
+      }
     } catch {
       const reply = fallbackReply(content);
       chatMessages.push({ role: 'assistant', content: reply });
       if (typing) typing.remove();
       addMessageToDom(reply, 'bot');
+      const visual = selectVisualExample(content, reply);
+      if (visual) {
+        chatMessages.push({ role: 'assistant', type: 'visual', visualId: visual.id, content: `Exemplo visual mostrado: ${visual.title}` });
+        addVisualToDom(visual);
+      }
     } finally {
       saveConversation();
       updateProgress();

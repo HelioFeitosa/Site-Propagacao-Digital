@@ -4,4 +4,4 @@
 - Vercel project: propagacao-digital
 - Vercel team: heliofeitosa72-3091s-projects
 - Last SEO deploy: 2026-06-23 America/Sao_Paulo
-- Last deployment id: dpl_bRqFLLbiHA2i9fFQ1HzZG7n94jkp
+- Last deployment id: dpl_68EtQ2fJf5tqw9bztRTquR2M6ztS

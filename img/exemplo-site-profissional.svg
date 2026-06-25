@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" role="img" aria-label="Exemplo de site profissional">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#050908"/><stop offset="1" stop-color="#101900"/></linearGradient>
+    <linearGradient id="a" x1="0" x2="1"><stop stop-color="#00ff88"/><stop offset="1" stop-color="#b6ff00"/></linearGradient>
+  </defs>
+  <rect width="960" height="620" rx="34" fill="url(#bg)"/>
+  <rect x="66" y="62" width="828" height="496" rx="28" fill="#0c100e" stroke="#21402f"/>
+  <rect x="112" y="108" width="736" height="54" rx="16" fill="#141a16"/>
+  <text x="138" y="142" fill="#f7fff9" font-family="Arial, sans-serif" font-size="22" font-weight="900">Empresa Profissional</text>
+  <text x="610" y="141" fill="#aab8b0" font-family="Arial, sans-serif" font-size="15">Sobre  Servicos  FAQ  Contato</text>
+  <text x="112" y="252" fill="#f7fff9" font-family="Arial, sans-serif" font-size="52" font-weight="900">Site que apresenta,</text>
+  <text x="112" y="310" fill="#f7fff9" font-family="Arial, sans-serif" font-size="52" font-weight="900">gera confianca e vende.</text>
+  <text x="116" y="358" fill="#b9c9bf" font-family="Arial, sans-serif" font-size="22">Ideal para empresas que precisam aparecer no Google e receber contatos.</text>
+  <rect x="116" y="406" width="218" height="58" rx="16" fill="url(#a)"/>
+  <text x="151" y="443" fill="#06110b" font-family="Arial, sans-serif" font-size="19" font-weight="900">Chamar no WhatsApp</text>
+  <rect x="610" y="228" width="184" height="236" rx="24" fill="#121914" stroke="#2b5b40"/>
+  <rect x="640" y="258" width="124" height="84" rx="18" fill="#163c2a"/>
+  <rect x="640" y="366" width="124" height="14" rx="7" fill="#00ff88"/>
+  <rect x="640" y="394" width="92" height="14" rx="7" fill="#b6ff00"/>
+  <rect x="640" y="422" width="112" height="14" rx="7" fill="#00c8ff"/>
+</svg>

@@ -6,3 +6,4 @@ img-original-backup/
 *.png
 
 .env*
+.admin-token.local
