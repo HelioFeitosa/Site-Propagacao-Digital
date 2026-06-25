@@ -1,96 +1,91 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" role="img" aria-label="Exemplo realista de loja virtual com vitrine de produtos, preços e carrinho">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" role="img" aria-label="Exemplo de loja virtual completa com banner, filtros e grade de produtos">
   <defs>
-    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-      <stop stop-color="#08100d"/>
-      <stop offset=".54" stop-color="#0d1512"/>
-      <stop offset="1" stop-color="#111b10"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0" x2="1">
-      <stop stop-color="#00ff88"/>
-      <stop offset="1" stop-color="#a8ff00"/>
-    </linearGradient>
-    <linearGradient id="shoe1" x1="0" x2="1" y1="0" y2="1">
-      <stop stop-color="#1c294f"/>
-      <stop offset="1" stop-color="#00d889"/>
-    </linearGradient>
-    <linearGradient id="shoe2" x1="0" x2="1" y1="0" y2="1">
-      <stop stop-color="#4d205b"/>
-      <stop offset="1" stop-color="#00c8ff"/>
-    </linearGradient>
-    <linearGradient id="shoe3" x1="0" x2="1" y1="0" y2="1">
-      <stop stop-color="#6d4318"/>
-      <stop offset="1" stop-color="#baff00"/>
-    </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity=".42"/>
-    </filter>
+    <linearGradient id="phoneA" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#3affff"/><stop offset=".5" stop-color="#7d4dff"/><stop offset="1" stop-color="#ff3d7f"/></linearGradient>
+    <linearGradient id="phoneB" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#ffb000"/><stop offset=".55" stop-color="#ff4b2b"/><stop offset="1" stop-color="#2f6bff"/></linearGradient>
+    <linearGradient id="phoneC" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#2d315e"/><stop offset=".48" stop-color="#00d4ff"/><stop offset="1" stop-color="#75ff6a"/></linearGradient>
+    <linearGradient id="banner" x1="0" x2="1"><stop stop-color="#151515"/><stop offset="1" stop-color="#303030"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#000" flood-opacity=".28"/></filter>
   </defs>
 
-  <rect width="960" height="480" rx="30" fill="url(#bg)"/>
-  <rect x="38" y="32" width="884" height="416" rx="28" fill="#070b09" stroke="#1f5138" filter="url(#shadow)"/>
+  <rect width="960" height="480" rx="24" fill="#f1f2f4"/>
+  <rect width="960" height="66" fill="#f0063d"/>
+  <text x="48" y="40" fill="#fff" font-family="Arial, sans-serif" font-size="28" font-weight="900">Celular</text>
+  <text x="139" y="40" fill="#fff" font-family="Arial, sans-serif" font-size="14" font-weight="700">smartphones</text>
+  <rect x="286" y="18" width="342" height="30" rx="15" fill="#fff"/>
+  <text x="307" y="38" fill="#777" font-family="Arial, sans-serif" font-size="13">Busque por marca, modelo ou memoria</text>
+  <circle cx="664" cy="33" r="15" fill="#111"/>
+  <text x="659" y="38" fill="#fff" font-family="Arial, sans-serif" font-size="15" font-weight="900">⌕</text>
+  <text x="718" y="38" fill="#fff" font-family="Arial, sans-serif" font-size="13" font-weight="700">Minha conta</text>
+  <text x="824" y="38" fill="#fff" font-family="Arial, sans-serif" font-size="13" font-weight="700">Carrinho</text>
 
-  <g transform="translate(64 56)">
-    <rect width="832" height="54" rx="17" fill="#101713" stroke="#223d31"/>
-    <circle cx="28" cy="27" r="14" fill="url(#accent)"/>
-    <text x="50" y="34" fill="#f5fff9" font-family="Arial, sans-serif" font-size="20" font-weight="900">Loja de Calçados</text>
-    <text x="238" y="33" fill="#aebdb5" font-family="Arial, sans-serif" font-size="13" font-weight="700">Masculino</text>
-    <text x="325" y="33" fill="#aebdb5" font-family="Arial, sans-serif" font-size="13" font-weight="700">Feminino</text>
-    <text x="404" y="33" fill="#aebdb5" font-family="Arial, sans-serif" font-size="13" font-weight="700">Ofertas</text>
-    <rect x="588" y="12" width="132" height="30" rx="15" fill="#0d130f" stroke="#2b4a39"/>
-    <text x="612" y="32" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="12">Buscar produto</text>
-    <rect x="736" y="10" width="76" height="34" rx="17" fill="url(#accent)"/>
-    <text x="755" y="32" fill="#06100d" font-family="Arial, sans-serif" font-size="13" font-weight="900">Carrinho</text>
-  </g>
+  <rect x="0" y="66" width="960" height="170" fill="url(#banner)"/>
+  <rect x="66" y="88" width="190" height="126" rx="5" fill="#fff" filter="url(#shadow)"/>
+  <circle cx="161" cy="147" r="54" fill="#f1f1f1"/>
+  <rect x="139" y="103" width="44" height="88" rx="12" fill="#111"/>
+  <rect x="145" y="110" width="32" height="72" rx="8" fill="url(#phoneB)"/>
+  <circle cx="150" cy="116" r="3" fill="#111"/>
+  <rect x="130" y="194" width="62" height="16" rx="8" fill="#111"/>
+  <text x="143" y="206" fill="#fff" font-family="Arial, sans-serif" font-size="9" font-weight="900">R$ 899</text>
+  <rect x="294" y="98" width="128" height="23" rx="12" fill="#f0063d"/>
+  <text x="314" y="114" fill="#fff" font-family="Arial, sans-serif" font-size="11" font-weight="900">OFERTA DA SEMANA</text>
+  <text x="294" y="148" fill="#fff" font-family="Arial, sans-serif" font-size="32" font-weight="900">3 celulares mais vendidos</text>
+  <text x="294" y="183" fill="#fff" font-family="Arial, sans-serif" font-size="29" font-weight="900">com até 24% de desconto</text>
+  <text x="294" y="207" fill="#d7d7d7" font-family="Arial, sans-serif" font-size="14">Vitrine com promoção, preço claro e botão para comprar.</text>
+  <rect x="294" y="219" width="90" height="30" rx="15" fill="#f0063d"/>
+  <text x="319" y="239" fill="#fff" font-family="Arial, sans-serif" font-size="12" font-weight="900">Comprar</text>
+  <rect x="394" y="219" width="96" height="30" rx="15" fill="#fff"/>
+  <text x="416" y="239" fill="#222" font-family="Arial, sans-serif" font-size="12" font-weight="900">Ver ofertas</text>
 
-  <g transform="translate(64 134)">
-    <rect width="500" height="74" rx="20" fill="#101713" stroke="#1f4031"/>
-    <text x="24" y="34" fill="#f5fff9" font-family="Arial, sans-serif" font-size="26" font-weight="900">Tênis, sandálias e sapatos em oferta</text>
-    <text x="24" y="58" fill="#aebdb5" font-family="Arial, sans-serif" font-size="15">Cliente escolhe o produto, vê preço e chama no WhatsApp.</text>
+  <text x="380" y="268" fill="#222" font-family="Arial, sans-serif" font-size="22" font-weight="900">Novidades e produtos</text>
+  <rect x="70" y="286" width="820" height="34" rx="7" fill="#fff"/>
+  <text x="91" y="308" fill="#555" font-family="Arial, sans-serif" font-size="12">Marca</text>
+  <text x="225" y="308" fill="#555" font-family="Arial, sans-serif" font-size="12">Preço</text>
+  <text x="358" y="308" fill="#555" font-family="Arial, sans-serif" font-size="12">Condição</text>
+  <text x="508" y="308" fill="#555" font-family="Arial, sans-serif" font-size="12">Modelo</text>
+  <text x="654" y="308" fill="#555" font-family="Arial, sans-serif" font-size="12">Memória</text>
+  <text x="795" y="308" fill="#555" font-family="Arial, sans-serif" font-size="12">Cor</text>
 
-    <g transform="translate(0 102)">
-      <rect width="150" height="180" rx="18" fill="#111713" stroke="#244133"/>
-      <rect x="16" y="15" width="118" height="76" rx="14" fill="url(#shoe1)"/>
-      <path d="M38 65c30-24 55-27 78 3 5 7 1 16-8 16H43c-15 0-18-9-5-19z" fill="#f5fff9" opacity=".9"/>
-      <text x="16" y="120" fill="#f5fff9" font-family="Arial, sans-serif" font-size="15" font-weight="900">Tênis Runner</text>
-      <text x="16" y="142" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="12">Numeração 38-43</text>
-      <text x="16" y="170" fill="#00ff88" font-family="Arial, sans-serif" font-size="19" font-weight="900">R$ 149,90</text>
+  <g transform="translate(70 340)">
+    <g>
+      <rect width="126" height="122" rx="7" fill="#fff" filter="url(#shadow)"/>
+      <rect x="33" y="12" width="60" height="64" rx="10" fill="#111"/>
+      <rect x="38" y="17" width="50" height="54" rx="7" fill="url(#phoneA)"/>
+      <text x="13" y="92" fill="#222" font-family="Arial, sans-serif" font-size="11" font-weight="800">iPhone 11 Pro</text>
+      <text x="13" y="107" fill="#f0063d" font-family="Arial, sans-serif" font-size="12" font-weight="900">R$ 1.890,00</text>
+      <rect y="112" width="126" height="10" fill="#f0063d"/>
     </g>
-
-    <g transform="translate(172 102)">
-      <rect width="150" height="180" rx="18" fill="#111713" stroke="#244133"/>
-      <rect x="16" y="15" width="118" height="76" rx="14" fill="url(#shoe2)"/>
-      <path d="M35 74c24-13 47-12 76-1 9 4 8 15-2 15H42c-15 0-19-8-7-14z" fill="#f5fff9" opacity=".9"/>
-      <path d="M72 48h39v22H72z" fill="#111713"/>
-      <text x="16" y="120" fill="#f5fff9" font-family="Arial, sans-serif" font-size="15" font-weight="900">Sapato Social</text>
-      <text x="16" y="142" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="12">Couro sintético</text>
-      <text x="16" y="170" fill="#00ff88" font-family="Arial, sans-serif" font-size="19" font-weight="900">R$ 199,90</text>
+    <g transform="translate(142 0)">
+      <rect width="126" height="122" rx="7" fill="#fff" filter="url(#shadow)"/>
+      <rect x="25" y="13" width="76" height="62" rx="9" fill="url(#phoneB)"/>
+      <rect x="49" y="8" width="32" height="72" rx="8" fill="#111"/>
+      <rect x="54" y="15" width="22" height="58" rx="5" fill="url(#phoneA)"/>
+      <text x="13" y="92" fill="#222" font-family="Arial, sans-serif" font-size="11" font-weight="800">Samsung A54</text>
+      <text x="13" y="107" fill="#f0063d" font-family="Arial, sans-serif" font-size="12" font-weight="900">R$ 1.299,00</text>
+      <rect y="112" width="126" height="10" fill="#f0063d"/>
     </g>
-
-    <g transform="translate(344 102)">
-      <rect width="150" height="180" rx="18" fill="#111713" stroke="#244133"/>
-      <rect x="16" y="15" width="118" height="76" rx="14" fill="url(#shoe3)"/>
-      <path d="M35 78h78c10 0 12 11 2 14H36c-12-2-12-12-1-14z" fill="#f5fff9" opacity=".9"/>
-      <path d="M50 54h44c12 0 25 9 25 24H50z" fill="#111713"/>
-      <text x="16" y="120" fill="#f5fff9" font-family="Arial, sans-serif" font-size="15" font-weight="900">Sandália Casual</text>
-      <text x="16" y="142" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="12">Entrega no bairro</text>
-      <text x="16" y="170" fill="#00ff88" font-family="Arial, sans-serif" font-size="19" font-weight="900">R$ 79,90</text>
+    <g transform="translate(284 0)">
+      <rect width="126" height="122" rx="7" fill="#fff" filter="url(#shadow)"/>
+      <rect x="34" y="12" width="58" height="66" rx="9" fill="#111"/>
+      <rect x="39" y="17" width="48" height="56" rx="6" fill="url(#phoneC)"/>
+      <text x="13" y="92" fill="#222" font-family="Arial, sans-serif" font-size="11" font-weight="800">Moto G Power</text>
+      <text x="13" y="107" fill="#f0063d" font-family="Arial, sans-serif" font-size="12" font-weight="900">R$ 999,00</text>
+      <rect y="112" width="126" height="10" fill="#f0063d"/>
     </g>
-  </g>
-
-  <g transform="translate(610 134)">
-    <rect width="286" height="284" rx="22" fill="#0d130f" stroke="#00ff88"/>
-    <text x="24" y="38" fill="#f5fff9" font-family="Arial, sans-serif" font-size="22" font-weight="900">Pedido do cliente</text>
-    <text x="24" y="64" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="13">Resumo pronto para enviar no WhatsApp</text>
-    <line x1="24" y1="84" x2="262" y2="84" stroke="#24382e"/>
-    <text x="24" y="116" fill="#f5fff9" font-family="Arial, sans-serif" font-size="15" font-weight="800">Tênis Runner</text>
-    <text x="202" y="116" fill="#00ff88" font-family="Arial, sans-serif" font-size="15" font-weight="900">R$149,90</text>
-    <text x="24" y="148" fill="#f5fff9" font-family="Arial, sans-serif" font-size="15" font-weight="800">Sandália Casual</text>
-    <text x="210" y="148" fill="#00ff88" font-family="Arial, sans-serif" font-size="15" font-weight="900">R$79,90</text>
-    <rect x="24" y="176" width="238" height="38" rx="12" fill="#111b15" stroke="#24382e"/>
-    <text x="40" y="201" fill="#aebdb5" font-family="Arial, sans-serif" font-size="13">Entrega: bairro do cliente</text>
-    <text x="24" y="244" fill="#f5fff9" font-family="Arial, sans-serif" font-size="20" font-weight="900">Total: R$ 229,80</text>
-    <rect x="24" y="258" width="238" height="0" fill="none"/>
-    <rect x="24" y="228" width="238" height="42" rx="21" transform="translate(0 28)" fill="url(#accent)"/>
-    <text x="75" y="282" fill="#06100d" font-family="Arial, sans-serif" font-size="15" font-weight="900">Finalizar pelo WhatsApp</text>
+    <g transform="translate(426 0)">
+      <rect width="126" height="122" rx="7" fill="#fff" filter="url(#shadow)"/>
+      <rect x="28" y="13" width="70" height="62" rx="10" fill="#171717"/>
+      <rect x="36" y="21" width="54" height="46" rx="8" fill="url(#phoneB)"/>
+      <text x="13" y="92" fill="#222" font-family="Arial, sans-serif" font-size="11" font-weight="800">Redmi Note</text>
+      <text x="13" y="107" fill="#f0063d" font-family="Arial, sans-serif" font-size="12" font-weight="900">R$ 879,00</text>
+      <rect y="112" width="126" height="10" fill="#f0063d"/>
+    </g>
+    <g transform="translate(568 0)">
+      <rect width="126" height="122" rx="7" fill="#fff" filter="url(#shadow)"/>
+      <rect x="34" y="12" width="58" height="66" rx="9" fill="#111"/>
+      <rect x="39" y="17" width="48" height="56" rx="6" fill="url(#phoneA)"/>
+      <text x="13" y="92" fill="#222" font-family="Arial, sans-serif" font-size="11" font-weight="800">Galaxy S23</text>
+      <text x="13" y="107" fill="#f0063d" font-family="Arial, sans-serif" font-size="12" font-weight="900">R$ 2.990,00</text>
+      <rect y="112" width="126" height="10" fill="#f0063d"/>
+    </g>
   </g>
 </svg>
