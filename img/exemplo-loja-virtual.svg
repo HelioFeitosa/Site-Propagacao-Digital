@@ -1,24 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" role="img" aria-label="Modelo visual de uma loja virtual real">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" role="img" aria-label="Exemplo realista de loja virtual com vitrine de produtos, preços e carrinho">
   <defs>
     <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
-      <stop stop-color="#06100d"/>
-      <stop offset=".55" stop-color="#0b1410"/>
+      <stop stop-color="#08100d"/>
+      <stop offset=".54" stop-color="#0d1512"/>
       <stop offset="1" stop-color="#111b10"/>
     </linearGradient>
-    <linearGradient id="green" x1="0" x2="1">
+    <linearGradient id="accent" x1="0" x2="1">
       <stop stop-color="#00ff88"/>
-      <stop offset="1" stop-color="#baff00"/>
+      <stop offset="1" stop-color="#a8ff00"/>
     </linearGradient>
-    <linearGradient id="photo1" x1="0" x2="1" y1="0" y2="1">
-      <stop stop-color="#1d3f69"/>
-      <stop offset="1" stop-color="#00ff88"/>
+    <linearGradient id="shoe1" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#1c294f"/>
+      <stop offset="1" stop-color="#00d889"/>
     </linearGradient>
-    <linearGradient id="photo2" x1="0" x2="1" y1="0" y2="1">
-      <stop stop-color="#2b1c6d"/>
+    <linearGradient id="shoe2" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#4d205b"/>
       <stop offset="1" stop-color="#00c8ff"/>
     </linearGradient>
-    <linearGradient id="photo3" x1="0" x2="1" y1="0" y2="1">
-      <stop stop-color="#6a4b13"/>
+    <linearGradient id="shoe3" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#6d4318"/>
       <stop offset="1" stop-color="#baff00"/>
     </linearGradient>
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
@@ -26,70 +26,71 @@
     </filter>
   </defs>
 
-  <rect width="960" height="620" rx="34" fill="url(#bg)"/>
-  <rect x="42" y="38" width="876" height="544" rx="30" fill="#070b09" stroke="#1f5138" filter="url(#shadow)"/>
+  <rect width="960" height="480" rx="30" fill="url(#bg)"/>
+  <rect x="38" y="32" width="884" height="416" rx="28" fill="#070b09" stroke="#1f5138" filter="url(#shadow)"/>
 
-  <g transform="translate(74 72)">
-    <rect width="812" height="64" rx="18" fill="#101713" stroke="#223d31"/>
-    <circle cx="32" cy="32" r="16" fill="url(#green)"/>
-    <text x="58" y="39" fill="#f5fff9" font-family="Arial, sans-serif" font-size="22" font-weight="900">Loja Modelo</text>
-    <text x="235" y="38" fill="#aebdb5" font-family="Arial, sans-serif" font-size="14" font-weight="700">Inicio</text>
-    <text x="304" y="38" fill="#aebdb5" font-family="Arial, sans-serif" font-size="14" font-weight="700">Produtos</text>
-    <text x="392" y="38" fill="#aebdb5" font-family="Arial, sans-serif" font-size="14" font-weight="700">Entrega</text>
-    <rect x="596" y="16" width="94" height="32" rx="16" fill="#15221a" stroke="#00ff88"/>
-    <text x="619" y="37" fill="#00ff88" font-family="Arial, sans-serif" font-size="13" font-weight="900">Entrar</text>
-    <rect x="706" y="14" width="82" height="36" rx="18" fill="url(#green)"/>
-    <text x="727" y="38" fill="#06100d" font-family="Arial, sans-serif" font-size="14" font-weight="900">Carrinho</text>
+  <g transform="translate(64 56)">
+    <rect width="832" height="54" rx="17" fill="#101713" stroke="#223d31"/>
+    <circle cx="28" cy="27" r="14" fill="url(#accent)"/>
+    <text x="50" y="34" fill="#f5fff9" font-family="Arial, sans-serif" font-size="20" font-weight="900">Loja de Calçados</text>
+    <text x="238" y="33" fill="#aebdb5" font-family="Arial, sans-serif" font-size="13" font-weight="700">Masculino</text>
+    <text x="325" y="33" fill="#aebdb5" font-family="Arial, sans-serif" font-size="13" font-weight="700">Feminino</text>
+    <text x="404" y="33" fill="#aebdb5" font-family="Arial, sans-serif" font-size="13" font-weight="700">Ofertas</text>
+    <rect x="588" y="12" width="132" height="30" rx="15" fill="#0d130f" stroke="#2b4a39"/>
+    <text x="612" y="32" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="12">Buscar produto</text>
+    <rect x="736" y="10" width="76" height="34" rx="17" fill="url(#accent)"/>
+    <text x="755" y="32" fill="#06100d" font-family="Arial, sans-serif" font-size="13" font-weight="900">Carrinho</text>
   </g>
 
-  <g transform="translate(74 166)">
-    <rect width="812" height="112" rx="24" fill="#101713" stroke="#1e4635"/>
-    <text x="34" y="46" fill="#f5fff9" font-family="Arial, sans-serif" font-size="34" font-weight="900">Compre pelo celular com pedido organizado</text>
-    <text x="36" y="80" fill="#aebdb5" font-family="Arial, sans-serif" font-size="18">Vitrine, categorias, produto, preco, carrinho e chamada para WhatsApp.</text>
-    <rect x="626" y="38" width="148" height="42" rx="21" fill="url(#green)"/>
-    <text x="655" y="65" fill="#06100d" font-family="Arial, sans-serif" font-size="15" font-weight="900">Comprar agora</text>
+  <g transform="translate(64 134)">
+    <rect width="500" height="74" rx="20" fill="#101713" stroke="#1f4031"/>
+    <text x="24" y="34" fill="#f5fff9" font-family="Arial, sans-serif" font-size="26" font-weight="900">Tênis, sandálias e sapatos em oferta</text>
+    <text x="24" y="58" fill="#aebdb5" font-family="Arial, sans-serif" font-size="15">Cliente escolhe o produto, vê preço e chama no WhatsApp.</text>
+
+    <g transform="translate(0 102)">
+      <rect width="150" height="180" rx="18" fill="#111713" stroke="#244133"/>
+      <rect x="16" y="15" width="118" height="76" rx="14" fill="url(#shoe1)"/>
+      <path d="M38 65c30-24 55-27 78 3 5 7 1 16-8 16H43c-15 0-18-9-5-19z" fill="#f5fff9" opacity=".9"/>
+      <text x="16" y="120" fill="#f5fff9" font-family="Arial, sans-serif" font-size="15" font-weight="900">Tênis Runner</text>
+      <text x="16" y="142" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="12">Numeração 38-43</text>
+      <text x="16" y="170" fill="#00ff88" font-family="Arial, sans-serif" font-size="19" font-weight="900">R$ 149,90</text>
+    </g>
+
+    <g transform="translate(172 102)">
+      <rect width="150" height="180" rx="18" fill="#111713" stroke="#244133"/>
+      <rect x="16" y="15" width="118" height="76" rx="14" fill="url(#shoe2)"/>
+      <path d="M35 74c24-13 47-12 76-1 9 4 8 15-2 15H42c-15 0-19-8-7-14z" fill="#f5fff9" opacity=".9"/>
+      <path d="M72 48h39v22H72z" fill="#111713"/>
+      <text x="16" y="120" fill="#f5fff9" font-family="Arial, sans-serif" font-size="15" font-weight="900">Sapato Social</text>
+      <text x="16" y="142" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="12">Couro sintético</text>
+      <text x="16" y="170" fill="#00ff88" font-family="Arial, sans-serif" font-size="19" font-weight="900">R$ 199,90</text>
+    </g>
+
+    <g transform="translate(344 102)">
+      <rect width="150" height="180" rx="18" fill="#111713" stroke="#244133"/>
+      <rect x="16" y="15" width="118" height="76" rx="14" fill="url(#shoe3)"/>
+      <path d="M35 78h78c10 0 12 11 2 14H36c-12-2-12-12-1-14z" fill="#f5fff9" opacity=".9"/>
+      <path d="M50 54h44c12 0 25 9 25 24H50z" fill="#111713"/>
+      <text x="16" y="120" fill="#f5fff9" font-family="Arial, sans-serif" font-size="15" font-weight="900">Sandália Casual</text>
+      <text x="16" y="142" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="12">Entrega no bairro</text>
+      <text x="16" y="170" fill="#00ff88" font-family="Arial, sans-serif" font-size="19" font-weight="900">R$ 79,90</text>
+    </g>
   </g>
 
-  <g transform="translate(74 310)">
-    <text x="0" y="0" fill="#f5fff9" font-family="Arial, sans-serif" font-size="22" font-weight="900">Produtos em destaque</text>
-    <g transform="translate(0 28)">
-      <rect width="182" height="220" rx="20" fill="#111713" stroke="#234533"/>
-      <rect x="18" y="18" width="146" height="94" rx="16" fill="url(#photo1)"/>
-      <rect x="46" y="38" width="88" height="48" rx="10" fill="#f5fff9" opacity=".9"/>
-      <rect x="60" y="52" width="60" height="8" rx="4" fill="#113d2c"/>
-      <rect x="60" y="68" width="42" height="8" rx="4" fill="#00ff88"/>
-      <text x="18" y="145" fill="#f5fff9" font-family="Arial, sans-serif" font-size="17" font-weight="900">Produto 01</text>
-      <text x="18" y="170" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="13">Pronta entrega</text>
-      <text x="18" y="200" fill="#00ff88" font-family="Arial, sans-serif" font-size="22" font-weight="900">R$ 89,90</text>
-    </g>
-    <g transform="translate(204 28)">
-      <rect width="182" height="220" rx="20" fill="#111713" stroke="#234533"/>
-      <rect x="18" y="18" width="146" height="94" rx="16" fill="url(#photo2)"/>
-      <circle cx="91" cy="65" r="36" fill="#f5fff9" opacity=".9"/>
-      <circle cx="91" cy="65" r="22" fill="#0f241b"/>
-      <text x="18" y="145" fill="#f5fff9" font-family="Arial, sans-serif" font-size="17" font-weight="900">Produto 02</text>
-      <text x="18" y="170" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="13">Mais vendido</text>
-      <text x="18" y="200" fill="#00ff88" font-family="Arial, sans-serif" font-size="22" font-weight="900">R$ 129,90</text>
-    </g>
-    <g transform="translate(408 28)">
-      <rect width="182" height="220" rx="20" fill="#111713" stroke="#234533"/>
-      <rect x="18" y="18" width="146" height="94" rx="16" fill="url(#photo3)"/>
-      <path d="M54 86h74l-12-42H66z" fill="#f5fff9" opacity=".92"/>
-      <path d="M74 44h34l7 42H67z" fill="#16251b"/>
-      <text x="18" y="145" fill="#f5fff9" font-family="Arial, sans-serif" font-size="17" font-weight="900">Produto 03</text>
-      <text x="18" y="170" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="13">Oferta do dia</text>
-      <text x="18" y="200" fill="#00ff88" font-family="Arial, sans-serif" font-size="22" font-weight="900">R$ 59,90</text>
-    </g>
-
-    <g transform="translate(628 28)">
-      <rect width="184" height="220" rx="20" fill="#0d130f" stroke="#00ff88"/>
-      <text x="22" y="38" fill="#f5fff9" font-family="Arial, sans-serif" font-size="20" font-weight="900">Resumo</text>
-      <line x1="22" y1="58" x2="162" y2="58" stroke="#24382e"/>
-      <text x="22" y="88" fill="#aebdb5" font-family="Arial, sans-serif" font-size="14">2 produtos</text>
-      <text x="22" y="118" fill="#aebdb5" font-family="Arial, sans-serif" font-size="14">Entrega local</text>
-      <text x="22" y="148" fill="#f5fff9" font-family="Arial, sans-serif" font-size="18" font-weight="900">Total: R$ 219,80</text>
-      <rect x="22" y="170" width="140" height="36" rx="18" fill="url(#green)"/>
-      <text x="45" y="193" fill="#06100d" font-family="Arial, sans-serif" font-size="13" font-weight="900">Finalizar pedido</text>
-    </g>
+  <g transform="translate(610 134)">
+    <rect width="286" height="284" rx="22" fill="#0d130f" stroke="#00ff88"/>
+    <text x="24" y="38" fill="#f5fff9" font-family="Arial, sans-serif" font-size="22" font-weight="900">Pedido do cliente</text>
+    <text x="24" y="64" fill="#9fb0a7" font-family="Arial, sans-serif" font-size="13">Resumo pronto para enviar no WhatsApp</text>
+    <line x1="24" y1="84" x2="262" y2="84" stroke="#24382e"/>
+    <text x="24" y="116" fill="#f5fff9" font-family="Arial, sans-serif" font-size="15" font-weight="800">Tênis Runner</text>
+    <text x="202" y="116" fill="#00ff88" font-family="Arial, sans-serif" font-size="15" font-weight="900">R$149,90</text>
+    <text x="24" y="148" fill="#f5fff9" font-family="Arial, sans-serif" font-size="15" font-weight="800">Sandália Casual</text>
+    <text x="210" y="148" fill="#00ff88" font-family="Arial, sans-serif" font-size="15" font-weight="900">R$79,90</text>
+    <rect x="24" y="176" width="238" height="38" rx="12" fill="#111b15" stroke="#24382e"/>
+    <text x="40" y="201" fill="#aebdb5" font-family="Arial, sans-serif" font-size="13">Entrega: bairro do cliente</text>
+    <text x="24" y="244" fill="#f5fff9" font-family="Arial, sans-serif" font-size="20" font-weight="900">Total: R$ 229,80</text>
+    <rect x="24" y="258" width="238" height="0" fill="none"/>
+    <rect x="24" y="228" width="238" height="42" rx="21" transform="translate(0 28)" fill="url(#accent)"/>
+    <text x="75" y="282" fill="#06100d" font-family="Arial, sans-serif" font-size="15" font-weight="900">Finalizar pelo WhatsApp</text>
   </g>
 </svg>
