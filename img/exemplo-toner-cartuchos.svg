@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" role="img" aria-label="Exemplo de loja para toner e cartuchos">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#050908"/>
+      <stop offset="1" stop-color="#001b17"/>
+    </linearGradient>
+    <linearGradient id="a" x1="0" x2="1">
+      <stop offset="0" stop-color="#00ff88"/>
+      <stop offset="1" stop-color="#00c8ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="620" rx="34" fill="url(#bg)"/>
+  <rect x="58" y="54" width="844" height="512" rx="30" fill="#0b0f0d" stroke="#1c4934"/>
+  <rect x="98" y="92" width="764" height="64" rx="18" fill="#121713"/>
+  <text x="128" y="134" fill="#f6fff9" font-family="Arial, sans-serif" font-size="25" font-weight="900">Toners do Neto</text>
+  <text x="632" y="132" fill="#9db6aa" font-family="Arial, sans-serif" font-size="16">Produtos  Compatibilidade  WhatsApp</text>
+  <text x="102" y="238" fill="#f6fff9" font-family="Arial, sans-serif" font-size="48" font-weight="900">Toner e cartucho</text>
+  <text x="102" y="294" fill="#f6fff9" font-family="Arial, sans-serif" font-size="48" font-weight="900">com pedido rapido</text>
+  <text x="106" y="338" fill="#b9c9bf" font-family="Arial, sans-serif" font-size="22">Vitrine por modelo de impressora, preco e chamada no WhatsApp.</text>
+  <rect x="106" y="386" width="224" height="58" rx="16" fill="url(#a)"/>
+  <text x="143" y="423" fill="#06110b" font-family="Arial, sans-serif" font-size="19" font-weight="900">Pedir no WhatsApp</text>
+  <g transform="translate(578 198)">
+    <rect x="0" y="0" width="250" height="260" rx="24" fill="#111713" stroke="#2b5b40"/>
+    <rect x="44" y="54" width="162" height="88" rx="14" fill="#1a2420"/>
+    <rect x="68" y="78" width="114" height="40" rx="10" fill="#2d3832"/>
+    <rect x="54" y="152" width="142" height="46" rx="12" fill="#0f1412" stroke="#374b40"/>
+    <circle cx="68" cy="214" r="10" fill="#00ff88"/>
+    <circle cx="102" cy="214" r="10" fill="#00c8ff"/>
+    <circle cx="136" cy="214" r="10" fill="#b6ff00"/>
+    <text x="54" y="34" fill="#00ff88" font-family="Arial, sans-serif" font-size="18" font-weight="900">HP | Brother | Samsung</text>
+  </g>
+  <g transform="translate(106 480)">
+    <rect width="190" height="52" rx="14" fill="#121814" stroke="#26392f"/>
+    <rect x="210" width="190" height="52" rx="14" fill="#121814" stroke="#26392f"/>
+    <rect x="420" width="190" height="52" rx="14" fill="#121814" stroke="#26392f"/>
+    <text x="22" y="33" fill="#00ff88" font-family="Arial, sans-serif" font-size="17" font-weight="900">Pronta entrega</text>
+    <text x="232" y="33" fill="#00ff88" font-family="Arial, sans-serif" font-size="17" font-weight="900">Compatibilidade</text>
+    <text x="442" y="33" fill="#00ff88" font-family="Arial, sans-serif" font-size="17" font-weight="900">Orcamento rapido</text>
+  </g>
+</svg>

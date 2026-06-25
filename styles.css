@@ -1556,12 +1556,12 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 .pd-assistant-visual {
   align-self: flex-start;
-  width: min(88%, 360px);
+  width: min(96%, 430px);
   overflow: hidden;
-  border: 1px solid rgba(0, 255, 136, 0.22);
-  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 136, 0.38);
+  border-radius: 12px;
   background: #101612;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(0, 255, 136, 0.06);
   animation: pd-message-in 220ms ease both;
 }
 
@@ -1599,6 +1599,28 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   color: rgba(245, 245, 245, 0.68);
   font-size: 0.76rem;
   line-height: 1.45;
+}
+
+.pd-assistant-visual a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 34px;
+  margin-top: 0.15rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(0, 255, 136, 0.42);
+  border-radius: 6px;
+  color: var(--color-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.pd-assistant-visual a:hover,
+.pd-assistant-visual a:focus-visible {
+  background: rgba(0, 255, 136, 0.1);
+  outline: none;
 }
 
 .pd-assistant-typing {

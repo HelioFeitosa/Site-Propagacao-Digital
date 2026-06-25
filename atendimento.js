@@ -52,6 +52,12 @@
   };
 
   const visualExamples = {
+    toner: {
+      id: 'toner',
+      title: 'Exemplo visual para toner e cartuchos',
+      image: '/img/exemplo-toner-cartuchos.svg',
+      text: 'Vitrine por modelo de impressora, compatibilidade, preço e botão direto para orçamento no WhatsApp.'
+    },
     pizzaria: {
       id: 'pizzaria',
       title: 'Exemplo visual para pizzaria',
@@ -254,9 +260,10 @@
     card.innerHTML = `
       <img src="${escapeHtml(example.image)}" alt="${escapeHtml(example.title)}" loading="lazy" />
       <div>
-        <span>modelo visual</span>
+        <span>imagem do modelo</span>
         <strong>${escapeHtml(example.title)}</strong>
         <p>${escapeHtml(example.text)}</p>
+        <a href="${escapeHtml(example.image)}" target="_blank" rel="noopener">Abrir imagem maior</a>
       </div>
     `;
     messages.appendChild(card);
@@ -342,12 +349,14 @@
       lead.service
     ].filter(Boolean).join(' '));
 
-    const askedForVisual = /(exemplo|modelo|imagem|foto|visual|como fica|mostrar|cardapio|cardapio digital|loja virtual|site)/.test(combined);
+    const explicitVisualRequest = /(imagem|foto|visual|mostra|mostrar|manda|mande|cade|cad[eê]|onde esta|onde esta|onde ficou|quero ver|monte|modelo|exemplo)/.test(combined);
+    const askedForVisual = explicitVisualRequest || /(cardapio|cardapio digital|loja virtual|site)/.test(combined);
     const hasContext = Boolean(lead.business || lead.product || lead.service);
     if (!askedForVisual && !hasContext) return null;
 
     let id = 'site';
-    if (/(pizza|pizzaria|esfiha|hamburg|lanche|delivery|marmita)/.test(combined)) id = 'pizzaria';
+    if (/(toner|cartucho|impressora|impressoras|suprimento|hp|brother|samsung|epson)/.test(combined)) id = 'toner';
+    else if (/(pizza|pizzaria|esfiha|hamburg|lanche|delivery|marmita)/.test(combined)) id = 'pizzaria';
     else if (/(acai|comida|cardapio|pedido|delivery|marmita|lanche)/.test(combined)) id = 'cardapio';
     else if (/(loja virtual|ecommerce|e-commerce|produto|roupa|calcado|sapato|colch|toner|cartucho|catalogo|vender online)/.test(combined)) id = 'loja';
     else if (/(barbearia|salao|clinica|oficina|assistencia|servico|orcamento|prestador|consultorio)/.test(combined)) id = 'servico';
@@ -356,7 +365,13 @@
     else if (lead.service === 'sites' || lead.service === 'seo') id = 'site';
 
     const alreadyShown = chatMessages.some((message) => message.type === 'visual' && message.visualId === id);
-    if (alreadyShown) return null;
+    const lastVisual = [...chatMessages].reverse().find((message) => message.type === 'visual');
+    if (alreadyShown && !explicitVisualRequest) return null;
+    if (explicitVisualRequest && lastVisual?.visualId === id) {
+      const lastUserMessages = chatMessages.filter((message) => message.role === 'user').slice(-2);
+      const repeatedAsk = lastUserMessages.some((message) => /(imagem|foto|mostra|manda|cade|quero ver|monte)/.test(normalizeMatch(message.content)));
+      if (!repeatedAsk) return null;
+    }
 
     return visualExamples[id];
   }
