@@ -72,9 +72,9 @@
     },
     loja: {
       id: 'loja',
-      title: 'Exemplo de loja virtual',
+      title: 'Modelo visual de loja virtual real',
       image: '/img/exemplo-loja-virtual.svg',
-      text: 'Produtos organizados, vitrine, carrinho e caminho simples para comprar pelo celular.'
+      text: 'Tela de e-commerce com vitrine, produtos, precos, carrinho e finalizacao de pedido pelo celular.'
     },
     servico: {
       id: 'servico',
