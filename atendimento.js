@@ -154,6 +154,10 @@
       .toLowerCase();
   }
 
+  function isExplicitVisualRequest(value) {
+    return /(imagem|foto|visual|mostra|mostrar|manda|mande|cade|cad[eê]|\bonde\b|onde esta|onde ficou|nao apareceu|nao esta aparecendo|quero ver|modelo|exemplo|loja pronta|site pronto|mockup|layout)/.test(normalizeMatch(value));
+  }
+
   function injectInterface() {
     const root = document.createElement('div');
     root.className = 'pd-assistant-root';
@@ -257,15 +261,23 @@
   function addVisualToDom(example) {
     const card = document.createElement('article');
     card.className = 'pd-assistant-visual';
+    card.setAttribute('data-visual-card', example.id);
     card.innerHTML = `
-      <img src="${escapeHtml(example.image)}" alt="${escapeHtml(example.title)}" loading="lazy" />
+      <a class="pd-assistant-visual-image-link" href="${escapeHtml(example.image)}" target="_blank" rel="noopener" aria-label="Abrir ${escapeHtml(example.title)} em tela cheia">
+        <img src="${escapeHtml(example.image)}" alt="${escapeHtml(example.title)}" loading="eager" />
+      </a>
       <div>
         <span>imagem do modelo</span>
         <strong>${escapeHtml(example.title)}</strong>
         <p>${escapeHtml(example.text)}</p>
         <a href="${escapeHtml(example.image)}" target="_blank" rel="noopener">Abrir imagem maior</a>
+        <small>Se a imagem nao carregar, clique no botao acima para abrir em tela cheia.</small>
       </div>
     `;
+    const img = card.querySelector('img');
+    img.addEventListener('load', () => {
+      messages.scrollTop = messages.scrollHeight;
+    }, { once: true });
     messages.appendChild(card);
     messages.scrollTop = messages.scrollHeight;
   }
@@ -325,6 +337,9 @@
     }
 
     if (lead.name || lead.business || lead.goal || lead.service) {
+      addAction('Ver modelo visual', () => {
+        showVisualForCurrentContext();
+      });
       addAction('Continuar no WhatsApp', () => {
         window.open(buildWhatsappUrl(), '_blank', 'noopener');
       });
@@ -340,6 +355,7 @@
   }
 
   function selectVisualExample(userText, replyText) {
+    const currentUserText = normalizeMatch(userText);
     const combined = normalizeMatch([
       userText,
       replyText,
@@ -349,7 +365,7 @@
       lead.service
     ].filter(Boolean).join(' '));
 
-    const explicitVisualRequest = /(imagem|foto|visual|mostra|mostrar|manda|mande|cade|cad[eê]|onde esta|onde esta|onde ficou|quero ver|monte|modelo|exemplo)/.test(combined);
+    const explicitVisualRequest = isExplicitVisualRequest(currentUserText);
     const askedForVisual = explicitVisualRequest || /(cardapio|cardapio digital|loja virtual|site)/.test(combined);
     const hasContext = Boolean(lead.business || lead.product || lead.service);
     if (!askedForVisual && !hasContext) return null;
@@ -365,15 +381,26 @@
     else if (lead.service === 'sites' || lead.service === 'seo') id = 'site';
 
     const alreadyShown = chatMessages.some((message) => message.type === 'visual' && message.visualId === id);
-    const lastVisual = [...chatMessages].reverse().find((message) => message.type === 'visual');
     if (alreadyShown && !explicitVisualRequest) return null;
-    if (explicitVisualRequest && lastVisual?.visualId === id) {
-      const lastUserMessages = chatMessages.filter((message) => message.role === 'user').slice(-2);
-      const repeatedAsk = lastUserMessages.some((message) => /(imagem|foto|mostra|manda|cade|quero ver|monte)/.test(normalizeMatch(message.content)));
-      if (!repeatedAsk) return null;
-    }
 
     return visualExamples[id];
+  }
+
+  function showVisualForCurrentContext() {
+    const visual = selectVisualExample('quero ver uma imagem do modelo visual', '');
+    if (!visual) return;
+
+    const reply = 'Aqui esta um modelo visual. Se nao carregar, toque em Abrir imagem maior.';
+    chatMessages.push({ role: 'assistant', content: reply });
+    chatMessages.push({
+      role: 'assistant',
+      type: 'visual',
+      visualId: visual.id,
+      content: `Exemplo visual mostrado: ${visual.title}`
+    });
+    addMessageToDom(reply, 'bot');
+    addVisualToDom(visual);
+    saveConversation();
   }
 
   async function submitMessage(text) {
