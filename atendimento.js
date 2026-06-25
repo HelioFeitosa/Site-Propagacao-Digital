@@ -330,16 +330,19 @@
   function renderActions() {
     options.innerHTML = '';
 
+    if (lead.name || lead.business || lead.goal || lead.service) {
+      addAction('Ver modelo visual', () => {
+        showVisualForCurrentContext();
+      });
+    }
+
     if (lead.service && services[lead.service]) {
-      addAction('Conhecer solução', () => {
+      addAction('Ver pagina do servico', () => {
         window.location.href = services[lead.service].path;
       });
     }
 
     if (lead.name || lead.business || lead.goal || lead.service) {
-      addAction('Ver modelo visual', () => {
-        showVisualForCurrentContext();
-      });
       addAction('Continuar no WhatsApp', () => {
         window.open(buildWhatsappUrl(), '_blank', 'noopener');
       });
