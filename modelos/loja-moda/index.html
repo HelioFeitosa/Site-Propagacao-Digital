@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lume Moda | Loja virtual demonstrativa</title>
+  <meta name="description" content="Demonstração funcional de loja virtual de moda criada pela Propagação Digital." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="demo-notice" id="demo-notice">Demonstração criada pela Propagação Digital. Marca, produtos e preços são fictícios.</div>
+  <header class="store-header">
+    <a class="store-logo" href="#inicio" aria-label="Lume Moda, início">LUME <span>MODA</span></a>
+    <nav aria-label="Navegação principal"><a href="#novidades">Novidades</a><a href="#produtos">Produtos</a><a href="#beneficios">Benefícios</a></nav>
+    <button id="cart-button" type="button" aria-controls="cart-drawer" aria-expanded="false">Sacola <span id="cart-count">0</span></button>
+  </header>
+
+  <main id="inicio">
+    <section class="store-hero">
+      <div><span class="hero-kicker">Nova coleção</span><h1>Vista sua luz.<br />Encontre seu estilo.</h1><p>Peças versáteis para acompanhar seus melhores momentos, com compra simples e atendimento próximo.</p><a href="#produtos">Conhecer coleção</a></div>
+      <div class="hero-visual" role="img" aria-label="Seleção de moda contemporânea da Lume Moda"></div>
+    </section>
+
+    <section class="store-benefits" id="beneficios" aria-label="Benefícios da loja"><div><strong>Compra segura</strong><span>Demonstração sem pagamento real</span></div><div><strong>Troca facilitada</strong><span>Experiência de uma loja completa</span></div><div><strong>Atendimento</strong><span>Pedido e dúvidas pelo WhatsApp</span></div></section>
+
+    <section class="catalog-section" id="produtos">
+      <header class="catalog-heading"><div><span id="novidades">Coleção Lume</span><h2>Escolha sua próxima peça favorita</h2></div><label class="search-box" for="search-input"><span>Buscar</span><input id="search-input" type="search" placeholder="Vestido, calçado, acessório..." autocomplete="off" /></label></header>
+      <div class="category-filters" id="category-filters" aria-label="Filtrar por categoria"></div>
+      <p class="results-status" id="results-status" aria-live="polite"></p>
+      <div class="product-grid" id="product-grid"></div>
+      <div class="empty-results" id="empty-results" hidden><h3>Nenhuma peça encontrada</h3><p>Tente outro nome ou veja toda a coleção.</p><button type="button" id="clear-search">Limpar busca</button></div>
+    </section>
+  </main>
+
+  <aside class="cart-drawer" id="cart-drawer" aria-label="Sacola de compras" aria-hidden="true"><header><div><span>Sua seleção</span><h2>Sacola</h2></div><button type="button" id="cart-close" aria-label="Fechar sacola">×</button></header><div id="cart-items"></div><footer><div><span>Total demonstrativo</span><strong id="cart-total">R$ 0,00</strong></div><button type="button" id="cart-checkout" disabled>Finalizar pelo WhatsApp</button><p id="cart-help">Adicione uma peça para continuar.</p></footer></aside>
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <dialog class="product-modal" id="product-modal"><button type="button" id="product-modal-close" aria-label="Fechar detalhes">×</button><div id="product-modal-content"></div></dialog>
+
+  <footer class="store-footer"><div><strong>LUME MODA</strong><p>Uma loja fictícia criada para demonstrar possibilidades reais de venda online.</p></div><a href="/galeria-modelos">← Voltar à galeria da Propagação Digital</a></footer>
+
+  <script src="catalogo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
