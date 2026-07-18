@@ -11,6 +11,13 @@ const catalog = fs.readFileSync(catalogPath, 'utf8');
 
 assert.match(html, /Lume Moda/);
 assert.match(html, /demonstração.*Propagação Digital/i);
+assert.match(html, /Lume Modas/i);
+assert.match(html, /class="commerce-header"/);
+assert.match(html, /class="commerce-search"/);
+assert.match(html, /class="commerce-nav"/);
+for (const label of ['Feminino', 'Masculino', 'Calçados', 'Acessórios', 'Promoções', 'Contato']) {
+  assert.match(html, new RegExp(label, 'i'));
+}
 
 for (const id of [
   'demo-notice',

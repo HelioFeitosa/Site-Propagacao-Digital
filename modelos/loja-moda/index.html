@@ -3,18 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lume Moda | Loja virtual demonstrativa</title>
+  <title>Lume Modas | Loja virtual demonstrativa</title>
   <meta name="description" content="Demonstração funcional de loja virtual de moda criada pela Propagação Digital." />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="demo-notice" id="demo-notice">Demonstração criada pela Propagação Digital. Marca, produtos e preços são fictícios.</div>
-  <header class="store-header">
-    <a class="store-logo" href="#inicio" aria-label="Lume Moda, início">LUME <span>MODA</span></a>
-    <nav aria-label="Navegação principal"><a href="#novidades">Novidades</a><a href="#produtos">Produtos</a><a href="#beneficios">Benefícios</a></nav>
+  <header class="commerce-header">
+    <a class="store-logo" href="#inicio" aria-label="Lume Modas, início">LUME MODAS</a>
+    <label class="commerce-search" for="search-input"><span class="sr-only">Buscar produtos</span><input id="search-input" type="search" placeholder="Digite o que procura" autocomplete="off" /></label>
     <button id="cart-button" type="button" aria-controls="cart-drawer" aria-expanded="false">Sacola <span id="cart-count">0</span></button>
   </header>
+  <nav class="commerce-nav" aria-label="Categorias principais"><a href="#produtos" data-nav-category="feminino">Feminino</a><a href="#produtos" data-nav-category="masculino">Masculino</a><a href="#produtos" data-nav-category="calcados">Calçados</a><a href="#produtos" data-nav-category="acessorios">Acessórios</a><a href="#produtos" data-nav-category="novidades">Promoções</a><a href="#rodape">Contato</a></nav>
 
   <main id="inicio">
     <section class="store-hero">
@@ -25,7 +26,7 @@
     <section class="store-benefits" id="beneficios" aria-label="Benefícios da loja"><div><strong>Compra segura</strong><span>Demonstração sem pagamento real</span></div><div><strong>Troca facilitada</strong><span>Experiência de uma loja completa</span></div><div><strong>Atendimento</strong><span>Pedido e dúvidas pelo WhatsApp</span></div></section>
 
     <section class="catalog-section" id="produtos">
-      <header class="catalog-heading"><div><span id="novidades">Coleção Lume</span><h2>Escolha sua próxima peça favorita</h2></div><label class="search-box" for="search-input"><span>Buscar</span><input id="search-input" type="search" placeholder="Vestido, calçado, acessório..." autocomplete="off" /></label></header>
+      <header class="catalog-heading"><div><span id="novidades">Coleção Lume</span><h2>Escolha sua próxima peça favorita</h2></div></header>
       <div class="category-filters" id="category-filters" aria-label="Filtrar por categoria"></div>
       <p class="results-status" id="results-status" aria-live="polite"></p>
       <div class="product-grid" id="product-grid"></div>
