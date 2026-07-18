@@ -30,7 +30,14 @@ assert.match(html, /href="\/galeria-modelos"/);
 assert.match(catalog, /window\.LUME_PRODUCTS/);
 assert.ok((catalog.match(/\bid:/g) || []).length >= 8, 'O catálogo precisa de pelo menos oito produtos');
 
-const { filterProducts, formatCurrency } = require('../modelos/loja-moda/app.js');
+const {
+  filterProducts,
+  formatCurrency,
+  addCartItem,
+  updateCartQuantity,
+  removeCartItem,
+  cartTotal
+} = require('../modelos/loja-moda/app.js');
 const searchFixture = [
   { name: 'Vestido Midi', category: 'vestidos', description: 'Leve e fluido' },
   { name: 'Tênis Urbano', category: 'calcados', description: 'Casual branco' },
@@ -42,5 +49,19 @@ assert.equal(filterProducts(searchFixture, 'tenis', 'all').length, 1);
 assert.equal(filterProducts(searchFixture, '', 'vestidos').length, 1);
 assert.equal(filterProducts(searchFixture, 'produto inexistente', 'all').length, 0);
 assert.equal(formatCurrency(189.9), 'R$ 189,90');
+
+let cart = addCartItem([], { productId: 'vestido-midi', name: 'Vestido Midi', price: 189.9, size: 'M', color: 'Preto', quantity: 1 });
+cart = addCartItem(cart, { productId: 'vestido-midi', name: 'Vestido Midi', price: 189.9, size: 'M', color: 'Preto', quantity: 1 });
+assert.equal(cart.length, 1);
+assert.equal(cart[0].quantity, 2);
+assert.equal(cartTotal(cart), 379.8);
+
+cart = addCartItem(cart, { productId: 'vestido-midi', name: 'Vestido Midi', price: 189.9, size: 'G', color: 'Preto', quantity: 1 });
+assert.equal(cart.length, 2, 'Tamanhos diferentes devem permanecer como itens diferentes');
+cart = updateCartQuantity(cart, cart[0].key, 3);
+assert.equal(cart[0].quantity, 3);
+cart = removeCartItem(cart, cart[0].key);
+assert.equal(cart.length, 1);
+assert.equal(updateCartQuantity(cart, cart[0].key, 0).length, 0, 'Quantidade zero remove o item');
 
 console.log('Loja Lume Moda structural tests passed.');
