@@ -18,9 +18,12 @@
   <nav class="commerce-nav" aria-label="Categorias principais"><a href="#produtos" data-nav-category="feminino">Feminino</a><a href="#produtos" data-nav-category="masculino">Masculino</a><a href="#produtos" data-nav-category="calcados">Calçados</a><a href="#produtos" data-nav-category="acessorios">Acessórios</a><a href="#produtos" data-nav-category="novidades">Promoções</a><a href="#rodape">Contato</a></nav>
 
   <main id="inicio">
-    <section class="store-hero">
-      <div><span class="hero-kicker">Nova coleção</span><h1>Vista sua luz.<br />Encontre seu estilo.</h1><p>Peças versáteis para acompanhar seus melhores momentos, com compra simples e atendimento próximo.</p><a href="#produtos">Conhecer coleção</a></div>
-      <div class="hero-visual" role="img" aria-label="Seleção de moda contemporânea da Lume Moda"></div>
+    <section class="fashion-carousel" aria-roledescription="carrossel" aria-label="Destaques da Lume Modas">
+      <article class="fashion-slide is-active" data-carousel-slide aria-hidden="false" style="--banner:url('assets/banner-moda-1.jpg')"><div><span>Coleção Lume</span><h1>Moda, calçados e acessórios</h1><p>Escolha suas peças favoritas e monte seu pedido pelo WhatsApp.</p><a href="#produtos">Ver ofertas</a></div></article>
+      <article class="fashion-slide" data-carousel-slide aria-hidden="true" style="--banner:url('assets/banner-moda-2.jpg')"><div><span>Novos estilos</span><h2>Looks para todos os momentos</h2><p>Descubra cores, tamanhos e combinações.</p><a href="#produtos">Conhecer novidades</a></div></article>
+      <article class="fashion-slide" data-carousel-slide aria-hidden="true" style="--banner:url('assets/banner-moda-3.png')"><div><span>Compra simples</span><h2>Sua seleção pronta no WhatsApp</h2><p>Monte a sacola e envie o resumo para atendimento.</p><a href="#produtos">Montar sacola</a></div></article>
+      <button class="carousel-arrow carousel-prev" id="carousel-prev" type="button" aria-label="Banner anterior">‹</button><button class="carousel-arrow carousel-next" id="carousel-next" type="button" aria-label="Próximo banner">›</button>
+      <div class="carousel-dots"><button type="button" data-carousel-dot="0" aria-label="Mostrar banner 1" aria-current="true"></button><button type="button" data-carousel-dot="1" aria-label="Mostrar banner 2"></button><button type="button" data-carousel-dot="2" aria-label="Mostrar banner 3"></button></div>
     </section>
 
     <section class="store-benefits" id="beneficios" aria-label="Benefícios da loja"><div><strong>Compra segura</strong><span>Demonstração sem pagamento real</span></div><div><strong>Troca facilitada</strong><span>Experiência de uma loja completa</span></div><div><strong>Atendimento</strong><span>Pedido e dúvidas pelo WhatsApp</span></div></section>

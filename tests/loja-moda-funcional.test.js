@@ -36,6 +36,10 @@ assert.match(html, /src="app\.js"/);
 assert.match(html, /href="\/galeria-modelos"/);
 assert.match(catalog, /window\.LUME_PRODUCTS/);
 assert.ok((catalog.match(/\bid:/g) || []).length >= 8, 'O catálogo precisa de pelo menos oito produtos');
+assert.equal((html.match(/data-carousel-slide/g) || []).length, 3);
+assert.match(html, /id="carousel-prev"/);
+assert.match(html, /id="carousel-next"/);
+assert.equal((html.match(/data-carousel-dot/g) || []).length, 3);
 
 const {
   filterProducts,
@@ -44,7 +48,9 @@ const {
   updateCartQuantity,
   removeCartItem,
   cartTotal,
-  buildWhatsAppUrl
+  buildWhatsAppUrl,
+  normalizeSlideIndex,
+  nextSlideIndex
 } = require('../modelos/loja-moda/app.js');
 const searchFixture = [
   { name: 'Vestido Midi', category: 'vestidos', description: 'Leve e fluido' },
@@ -81,5 +87,10 @@ const whatsappMessage = decodeURIComponent(whatsappUrl.split('?text=')[1]);
 assert.match(whatsappMessage, /demonstração Lume Moda/i);
 assert.match(whatsappMessage, /2x Vestido Midi/);
 assert.match(whatsappMessage, /R\$\s?379,80/);
+
+assert.equal(normalizeSlideIndex(-1, 3), 2);
+assert.equal(normalizeSlideIndex(3, 3), 0);
+assert.equal(nextSlideIndex(1, 3, 1), 2);
+assert.equal(nextSlideIndex(0, 3, -1), 2);
 
 console.log('Loja Lume Moda structural tests passed.');

@@ -29,6 +29,15 @@
     return { x: column * 25, y: row * 100 };
   }
 
+  function normalizeSlideIndex(index, length) {
+    if (!Number.isInteger(length) || length <= 0) return 0;
+    return ((Number(index) % length) + length) % length;
+  }
+
+  function nextSlideIndex(index, length, direction = 1) {
+    return normalizeSlideIndex(Number(index) + Number(direction || 1), length);
+  }
+
   function cartKey(item) {
     return `${String(item.productId || '')}::${String(item.size || '')}::${String(item.color || '')}`;
   }
@@ -71,7 +80,7 @@
       return `- ${item.quantity}x ${item.name} | Tam. ${item.size} | ${item.color} | ${formatCurrency(subtotal)}`;
     });
     const message = [
-      'Olá! Montei este pedido na demonstração Lume Moda da Propagação Digital:',
+      'Olá! Montei este pedido na demonstração Lume Modas da Propagação Digital:',
       '',
       ...lines,
       '',
@@ -116,9 +125,16 @@
     const cartCheckout = document.getElementById('cart-checkout');
     const cartHelp = document.getElementById('cart-help');
     const backdrop = document.getElementById('drawer-backdrop');
+    const carousel = document.querySelector('.fashion-carousel');
+    const carouselSlides = Array.from(document.querySelectorAll('[data-carousel-slide]'));
+    const carouselDots = Array.from(document.querySelectorAll('[data-carousel-dot]'));
+    const carouselPrev = document.getElementById('carousel-prev');
+    const carouselNext = document.getElementById('carousel-next');
     if (!grid || !search || !filters || !status || !empty || !clearSearch) return;
 
     let activeCategory = 'all';
+    let activeSlide = 0;
+    let carouselTimer = null;
     const storageKey = 'lume-moda-demo-cart-v1';
     let cart = [];
 
@@ -234,6 +250,32 @@
       modal.showModal();
     }
 
+    function showSlide(index) {
+      if (!carouselSlides.length) return;
+      activeSlide = normalizeSlideIndex(index, carouselSlides.length);
+      carouselSlides.forEach((slide, slideIndex) => {
+        const isActive = slideIndex === activeSlide;
+        slide.classList.toggle('is-active', isActive);
+        slide.setAttribute('aria-hidden', String(!isActive));
+      });
+      carouselDots.forEach((dot, dotIndex) => {
+        if (dotIndex === activeSlide) dot.setAttribute('aria-current', 'true');
+        else dot.removeAttribute('aria-current');
+      });
+    }
+
+    function stopCarousel() {
+      if (carouselTimer) global.clearInterval(carouselTimer);
+      carouselTimer = null;
+    }
+
+    function startCarousel() {
+      stopCarousel();
+      const reducedMotion = global.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      if (reducedMotion || carouselSlides.length < 2) return;
+      carouselTimer = global.setInterval(() => showSlide(nextSlideIndex(activeSlide, carouselSlides.length)), 6000);
+    }
+
     filters.addEventListener('click', (event) => {
       const button = event.target.closest('[data-category]');
       if (!button) return;
@@ -274,11 +316,32 @@
       const url = buildWhatsAppUrl(cart);
       if (url) global.open(url, '_blank', 'noopener,noreferrer');
     });
+    carouselPrev?.addEventListener('click', () => {
+      showSlide(nextSlideIndex(activeSlide, carouselSlides.length, -1));
+      startCarousel();
+    });
+    carouselNext?.addEventListener('click', () => {
+      showSlide(nextSlideIndex(activeSlide, carouselSlides.length, 1));
+      startCarousel();
+    });
+    carouselDots.forEach((dot) => dot.addEventListener('click', () => {
+      showSlide(Number(dot.dataset.carouselDot));
+      startCarousel();
+    }));
+    carousel?.addEventListener('mouseenter', stopCarousel);
+    carousel?.addEventListener('mouseleave', startCarousel);
+    carousel?.addEventListener('focusin', stopCarousel);
+    carousel?.addEventListener('focusout', (event) => {
+      if (!carousel.contains(event.relatedTarget)) startCarousel();
+    });
+    global.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener?.('change', startCarousel);
+    showSlide(0);
+    startCarousel();
     render();
     renderCart();
   }
 
-  const api = { normalizeText, filterProducts, formatCurrency, spritePosition, addCartItem, updateCartQuantity, removeCartItem, cartTotal, buildWhatsAppUrl };
+  const api = { normalizeText, filterProducts, formatCurrency, spritePosition, normalizeSlideIndex, nextSlideIndex, addCartItem, updateCartQuantity, removeCartItem, cartTotal, buildWhatsAppUrl };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initStore);
