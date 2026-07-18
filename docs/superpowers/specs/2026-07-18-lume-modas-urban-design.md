@@ -20,14 +20,19 @@ O topo terá duas faixas:
 
 No celular, a marca, a busca e a sacola serão reorganizadas sem causar rolagem horizontal. As categorias ficarão acessíveis por uma faixa horizontal rolável.
 
-## Banner principal
+## Carrossel principal com três banners
 
-- Usar a fotografia de roupas da referência do Banco de Ideias.
-- O banner ocupará toda a largura disponível abaixo da navegação.
-- Aplicar sobreposição escura suficiente para garantir legibilidade.
-- Título: "Moda, calçados e acessórios".
-- Texto de apoio curto sobre coleções, preços e compra pelo WhatsApp.
-- Botão rosa direcionando para os produtos.
+- Exibir no mínimo três banners fotográficos distintos de roupas no mesmo espaço.
+- Usar as fotografias de moda disponíveis no Banco de Ideias e uma composição coerente com os produtos da Lume Modas, sem repetir a mesma imagem.
+- O carrossel ocupará toda a largura disponível abaixo da navegação.
+- A troca automática ocorrerá em intervalo confortável, com transição suave.
+- Incluir setas anterior/próximo e indicadores em formato de bolinhas.
+- Pausar a troca enquanto o ponteiro estiver sobre o banner ou quando o foco estiver dentro do carrossel.
+- Respeitar a preferência de movimento reduzido do visitante, desativando a troca automática quando necessário.
+- Cada banner receberá sobreposição escura suficiente para garantir legibilidade.
+- O primeiro banner usará o título "Moda, calçados e acessórios"; os demais apresentarão mensagens curtas sobre coleções, novidades e compra simples.
+- Cada banner terá um botão rosa direcionando para a área de produtos ou para a categoria relacionada.
+- No celular, o enquadramento priorizará as roupas e manterá texto e controles legíveis.
 
 ## Catálogo e funcionalidades preservadas
 
@@ -74,7 +79,8 @@ Nenhum link externo, política publicada ou perfil social será inventado. Eleme
 A implementação deverá comprovar:
 
 - presença das duas faixas do cabeçalho e das seis categorias;
-- uso da fotografia aprovada no banner;
+- presença de pelo menos três banners distintos de roupas;
+- funcionamento da troca automática, setas, indicadores, pausa e preferência por movimento reduzido;
 - presença das seções profissionais do rodapé;
 - preservação dos testes de busca, filtros, carrinho e WhatsApp;
 - ausência de erros de JavaScript;
