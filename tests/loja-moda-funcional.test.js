@@ -5,9 +5,11 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const htmlPath = path.join(root, 'modelos', 'loja-moda', 'index.html');
 const catalogPath = path.join(root, 'modelos', 'loja-moda', 'catalogo.js');
+const cssPath = path.join(root, 'modelos', 'loja-moda', 'styles.css');
 
 const html = fs.readFileSync(htmlPath, 'utf8');
 const catalog = fs.readFileSync(catalogPath, 'utf8');
+const css = fs.readFileSync(cssPath, 'utf8');
 
 assert.match(html, /Lume Moda/);
 assert.match(html, /demonstração.*Propagação Digital/i);
@@ -40,6 +42,15 @@ assert.equal((html.match(/data-carousel-slide/g) || []).length, 3);
 assert.match(html, /id="carousel-prev"/);
 assert.match(html, /id="carousel-next"/);
 assert.equal((html.match(/data-carousel-dot/g) || []).length, 3);
+assert.match(html, /id="rodape"/);
+assert.match(html, /Formas de pagamento/i);
+assert.match(html, /Compra protegida/i);
+assert.match(html, /Atendimento/i);
+assert.match(html, /Política de privacidade/i);
+assert.match(html, /Demonstração criada pela Propagação Digital/i);
+assert.match(css, /--urban-blue:/);
+assert.match(css, /--urban-pink:/);
+assert.match(css, /@media \(max-width: 640px\)/);
 
 const {
   filterProducts,
