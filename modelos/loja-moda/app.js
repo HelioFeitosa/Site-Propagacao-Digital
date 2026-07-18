@@ -63,6 +63,25 @@
     return Math.round(total * 100) / 100;
   }
 
+  function buildWhatsAppUrl(cart) {
+    const items = (Array.isArray(cart) ? cart : []).filter(validCartItem);
+    if (!items.length) return '';
+    const lines = items.map((item) => {
+      const subtotal = (Number(item.price) || 0) * (Number(item.quantity) || 0);
+      return `- ${item.quantity}x ${item.name} | Tam. ${item.size} | ${item.color} | ${formatCurrency(subtotal)}`;
+    });
+    const message = [
+      'Olá! Montei este pedido na demonstração Lume Moda da Propagação Digital:',
+      '',
+      ...lines,
+      '',
+      `Total demonstrativo: ${formatCurrency(cartTotal(items))}`,
+      '',
+      'Gostaria de conversar sobre uma loja virtual assim para o meu negócio.'
+    ].join('\n');
+    return `https://wa.me/5591987137397?text=${encodeURIComponent(message)}`;
+  }
+
   function productVisual(product, className = 'product-visual') {
     const position = spritePosition(product.imageIndex);
     return `<div class="${className}" role="img" aria-label="${escapeHtml(product.name)}" style="--sheet-image:url('${escapeHtml(product.image)}');--sheet-x:${position.x}%;--sheet-y:${position.y}%"></div>`;
@@ -251,11 +270,15 @@
       if (button.dataset.cartAction === 'remove') cart = removeCartItem(cart, key);
       renderCart();
     });
+    cartCheckout?.addEventListener('click', () => {
+      const url = buildWhatsAppUrl(cart);
+      if (url) global.open(url, '_blank', 'noopener,noreferrer');
+    });
     render();
     renderCart();
   }
 
-  const api = { normalizeText, filterProducts, formatCurrency, spritePosition, addCartItem, updateCartQuantity, removeCartItem, cartTotal };
+  const api = { normalizeText, filterProducts, formatCurrency, spritePosition, addCartItem, updateCartQuantity, removeCartItem, cartTotal, buildWhatsAppUrl };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initStore);

@@ -36,7 +36,8 @@ const {
   addCartItem,
   updateCartQuantity,
   removeCartItem,
-  cartTotal
+  cartTotal,
+  buildWhatsAppUrl
 } = require('../modelos/loja-moda/app.js');
 const searchFixture = [
   { name: 'Vestido Midi', category: 'vestidos', description: 'Leve e fluido' },
@@ -63,5 +64,15 @@ assert.equal(cart[0].quantity, 3);
 cart = removeCartItem(cart, cart[0].key);
 assert.equal(cart.length, 1);
 assert.equal(updateCartQuantity(cart, cart[0].key, 0).length, 0, 'Quantidade zero remove o item');
+
+assert.equal(buildWhatsAppUrl([]), '', 'Carrinho vazio não deve abrir o WhatsApp');
+const whatsappUrl = buildWhatsAppUrl([
+  { productId: 'vestido-midi', name: 'Vestido Midi', price: 189.9, size: 'M', color: 'Preto', quantity: 2 }
+]);
+assert.match(whatsappUrl, /^https:\/\/wa\.me\/5591987137397\?text=/);
+const whatsappMessage = decodeURIComponent(whatsappUrl.split('?text=')[1]);
+assert.match(whatsappMessage, /demonstração Lume Moda/i);
+assert.match(whatsappMessage, /2x Vestido Midi/);
+assert.match(whatsappMessage, /R\$\s?379,80/);
 
 console.log('Loja Lume Moda structural tests passed.');
