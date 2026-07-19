@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lume Modas | Loja virtual demonstrativa</title>
+  <meta name="description" content="Demonstração funcional de loja virtual de moda criada pela Propagação Digital." />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="demo-notice" id="demo-notice">Demonstração criada pela Propagação Digital. Marca, produtos e preços são fictícios.</div>
+  <header class="commerce-header">
+    <a class="store-logo" href="#inicio" aria-label="Lume Modas, início">LUME MODAS</a>
+    <label class="commerce-search" for="search-input"><span class="sr-only">Buscar produtos</span><input id="search-input" type="search" placeholder="Digite o que procura" autocomplete="off" /></label>
+    <button id="cart-button" type="button" aria-controls="cart-drawer" aria-expanded="false">Sacola <span id="cart-count">0</span></button>
+  </header>
+  <nav class="commerce-nav" aria-label="Categorias principais"><a href="#produtos" data-nav-category="feminino">Feminino</a><a href="#produtos" data-nav-category="masculino">Masculino</a><a href="#produtos" data-nav-category="calcados">Calçados</a><a href="#produtos" data-nav-category="acessorios">Acessórios</a><a href="#produtos" data-nav-category="novidades">Promoções</a><a href="#rodape">Contato</a></nav>
+
+  <main id="inicio">
+    <section class="fashion-carousel" aria-roledescription="carrossel" aria-label="Destaques da Lume Modas">
+      <article class="fashion-slide is-active" data-carousel-slide aria-hidden="false" style="--banner:url('assets/banner-moda-1.jpg')"><div><span>Coleção Lume</span><h1>Moda, calçados e acessórios</h1><p>Escolha suas peças favoritas e monte seu pedido pelo WhatsApp.</p><a href="#produtos">Ver ofertas</a></div></article>
+      <article class="fashion-slide" data-carousel-slide aria-hidden="true" style="--banner:url('assets/banner-moda-2.jpg')"><div><span>Novos estilos</span><h2>Looks para todos os momentos</h2><p>Descubra cores, tamanhos e combinações.</p><a href="#produtos">Conhecer novidades</a></div></article>
+      <article class="fashion-slide" data-carousel-slide aria-hidden="true" style="--banner:url('assets/banner-moda-3.png')"><div><span>Compra simples</span><h2>Sua seleção pronta no WhatsApp</h2><p>Monte a sacola e envie o resumo para atendimento.</p><a href="#produtos">Montar sacola</a></div></article>
+      <button class="carousel-arrow carousel-prev" id="carousel-prev" type="button" aria-label="Banner anterior">‹</button><button class="carousel-arrow carousel-next" id="carousel-next" type="button" aria-label="Próximo banner">›</button>
+      <div class="carousel-dots"><button type="button" data-carousel-dot="0" aria-label="Mostrar banner 1" aria-current="true"></button><button type="button" data-carousel-dot="1" aria-label="Mostrar banner 2"></button><button type="button" data-carousel-dot="2" aria-label="Mostrar banner 3"></button></div>
+    </section>
+
+    <section class="store-benefits" id="beneficios" aria-label="Benefícios da loja"><div><strong>Compra segura</strong><span>Demonstração sem pagamento real</span></div><div><strong>Troca facilitada</strong><span>Experiência de uma loja completa</span></div><div><strong>Atendimento</strong><span>Pedido e dúvidas pelo WhatsApp</span></div></section>
+
+    <section class="catalog-section" id="produtos">
+      <header class="catalog-heading"><div><span id="novidades">Coleção Lume</span><h2>Escolha sua próxima peça favorita</h2></div></header>
+      <div class="category-filters" id="category-filters" aria-label="Filtrar por categoria"></div>
+      <p class="results-status" id="results-status" aria-live="polite"></p>
+      <div class="product-grid" id="product-grid"></div>
+      <div class="empty-results" id="empty-results" hidden><h3>Nenhuma peça encontrada</h3><p>Tente outro nome ou veja toda a coleção.</p><button type="button" id="clear-search">Limpar busca</button></div>
+    </section>
+  </main>
+
+  <aside class="cart-drawer" id="cart-drawer" aria-label="Sacola de compras" aria-hidden="true"><header><div><span>Sua seleção</span><h2>Sacola</h2></div><button type="button" id="cart-close" aria-label="Fechar sacola">×</button></header><div id="cart-items"></div><footer><div><span>Total demonstrativo</span><strong id="cart-total">R$ 0,00</strong></div><button type="button" id="cart-checkout" disabled>Finalizar pelo WhatsApp</button><p id="cart-help">Adicione uma peça para continuar.</p></footer></aside>
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+
+  <dialog class="product-modal" id="product-modal"><button type="button" id="product-modal-close" aria-label="Fechar detalhes">×</button><div id="product-modal-content"></div></dialog>
+
+  <footer class="store-footer" id="rodape">
+    <div class="footer-grid">
+      <section><h2>Lume Modas</h2><p>Modelo funcional de loja virtual criado para demonstrar uma experiência real de compra.</p></section>
+      <section><h3>Compre</h3><a href="#produtos">Feminino</a><a href="#produtos">Masculino</a><a href="#produtos">Calçados</a><a href="#produtos">Acessórios</a></section>
+      <section><h3>Atendimento</h3><a href="https://wa.me/5591987137397">WhatsApp comercial</a><span>Trocas e devoluções · demonstração</span><span>Política de privacidade · demonstração</span></section>
+      <section><h3>Projeto</h3><a href="/galeria-modelos">Voltar à Galeria de Modelos</a><span>Redes sociais · demonstração</span></section>
+    </div>
+    <div class="payment-strip"><span><strong>Formas de pagamento</strong> Pix, cartão e boleto · demonstração</span><span><strong>Compra protegida</strong> Nenhum pagamento real é processado</span></div>
+    <p class="footer-credit">Demonstração criada pela Propagação Digital.</p>
+  </footer>
+
+  <script src="catalogo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
