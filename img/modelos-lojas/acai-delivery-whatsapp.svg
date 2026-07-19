@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1700" viewBox="0 0 1280 1700" role="img" aria-labelledby="title desc">
+  <title id="title">Cardápio delivery para açaí em litro</title>
+  <desc id="desc">Tela de loja para açaí em litro, polpa in natura, combos e pedido por WhatsApp.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7fbf5"/>
+      <stop offset="1" stop-color="#ede7f8"/>
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#32114f"/>
+      <stop offset="1" stop-color="#6f24a8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#231230" flood-opacity=".18"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="1700" fill="url(#bg)"/>
+  <rect x="92" y="70" width="1096" height="1480" rx="36" fill="#10131a" filter="url(#shadow)"/>
+  <rect x="128" y="118" width="1024" height="1384" rx="24" fill="#ffffff"/>
+
+  <rect x="128" y="118" width="1024" height="96" rx="24" fill="#4b1972"/>
+  <rect x="128" y="174" width="1024" height="40" fill="#4b1972"/>
+  <circle cx="188" cy="166" r="26" fill="#89d34f"/>
+  <text x="228" y="176" font-family="Arial, sans-serif" font-size="34" font-weight="800" fill="#fff">Açaí do Ponto</text>
+  <rect x="704" y="142" width="256" height="48" rx="24" fill="#fff"/>
+  <text x="730" y="173" font-family="Arial, sans-serif" font-size="18" fill="#4b1972">Buscar litro, polpa ou combo</text>
+  <rect x="982" y="142" width="126" height="48" rx="24" fill="#25d366"/>
+  <text x="1013" y="173" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#09351c">WhatsApp</text>
+
+  <rect x="176" y="260" width="928" height="326" rx="28" fill="url(#hero)"/>
+  <circle cx="930" cy="386" r="128" fill="#7f39bd"/>
+  <circle cx="928" cy="386" r="98" fill="#3a1659"/>
+  <ellipse cx="928" cy="358" rx="78" ry="32" fill="#2b103f"/>
+  <path d="M850 372c50 52 105 52 156 0v86c-4 42-42 72-78 72s-74-30-78-72z" fill="#f4f1ee"/>
+  <path d="M867 380c42 34 80 34 122 0v74c-4 26-29 44-61 44s-57-18-61-44z" fill="#5f218e"/>
+  <circle cx="880" cy="402" r="12" fill="#89d34f"/>
+  <circle cx="932" cy="394" r="10" fill="#e7cb49"/>
+  <circle cx="974" cy="416" r="11" fill="#ff6f61"/>
+  <text x="218" y="346" font-family="Arial, sans-serif" font-size="28" font-weight="800" fill="#b8ff7a">AÇAÍ EM LITRO • POLPA IN NATURA</text>
+  <text x="218" y="410" font-family="Arial, sans-serif" font-size="62" font-weight="900" fill="#fff">Pedidos rápidos pelo WhatsApp</text>
+  <text x="218" y="466" font-family="Arial, sans-serif" font-size="25" fill="#f4eaff">Litro, combos, entrega por bairro e retirada no ponto.</text>
+  <rect x="218" y="506" width="202" height="54" rx="27" fill="#25d366"/>
+  <text x="257" y="541" font-family="Arial, sans-serif" font-size="20" font-weight="800" fill="#07351b">Pedir agora</text>
+
+  <text x="176" y="666" font-family="Arial, sans-serif" font-size="28" font-weight="900" fill="#27123a">Produtos em destaque</text>
+  <g font-family="Arial, sans-serif">
+    <g transform="translate(176 706)">
+      <rect width="278" height="286" rx="18" fill="#fff" stroke="#e8dde8"/>
+      <rect x="26" y="22" width="226" height="132" rx="18" fill="#5c238a"/>
+      <circle cx="139" cy="88" r="52" fill="#36124f"/>
+      <circle cx="104" cy="72" r="13" fill="#89d34f"/>
+      <circle cx="150" cy="60" r="12" fill="#e7cb49"/>
+      <circle cx="178" cy="94" r="14" fill="#ff6f61"/>
+      <text x="26" y="192" font-size="23" font-weight="800" fill="#27123a">Açaí 1 litro</text>
+      <text x="26" y="226" font-size="18" fill="#6d6076">Polpa in natura</text>
+      <text x="26" y="264" font-size="25" font-weight="900" fill="#4b1972">R$ 24,90</text>
+    </g>
+    <g transform="translate(501 706)">
+      <rect width="278" height="286" rx="18" fill="#fff" stroke="#e8dde8"/>
+      <rect x="26" y="22" width="226" height="132" rx="18" fill="#f2f7eb"/>
+      <rect x="76" y="48" width="126" height="88" rx="18" fill="#5c238a"/>
+      <path d="M80 82h118" stroke="#fff" stroke-width="12" stroke-linecap="round"/>
+      <text x="26" y="192" font-size="23" font-weight="800" fill="#27123a">Combo família</text>
+      <text x="26" y="226" font-size="18" fill="#6d6076">2 litros + granola</text>
+      <text x="26" y="264" font-size="25" font-weight="900" fill="#4b1972">R$ 46,90</text>
+    </g>
+    <g transform="translate(826 706)">
+      <rect width="278" height="286" rx="18" fill="#fff" stroke="#e8dde8"/>
+      <rect x="26" y="22" width="226" height="132" rx="18" fill="#fff7df"/>
+      <path d="M72 128h136l-18-70H90z" fill="#5c238a"/>
+      <path d="M92 58h96" stroke="#89d34f" stroke-width="14" stroke-linecap="round"/>
+      <text x="26" y="192" font-size="23" font-weight="800" fill="#27123a">Polpa congelada</text>
+      <text x="26" y="226" font-size="18" fill="#6d6076">Porções para revenda</text>
+      <text x="26" y="264" font-size="25" font-weight="900" fill="#4b1972">Sob consulta</text>
+    </g>
+  </g>
+
+  <rect x="176" y="1060" width="928" height="126" rx="22" fill="#f7f2fb" stroke="#eadcf3"/>
+  <text x="216" y="1110" font-family="Arial, sans-serif" font-size="26" font-weight="900" fill="#27123a">Área de entrega</text>
+  <text x="216" y="1150" font-family="Arial, sans-serif" font-size="20" fill="#6d6076">Informe seu bairro no WhatsApp e veja taxa, prazo e opção de retirada no ponto.</text>
+  <rect x="812" y="1094" width="236" height="58" rx="29" fill="#25d366"/>
+  <text x="858" y="1131" font-family="Arial, sans-serif" font-size="21" font-weight="900" fill="#07351b">Chamar entrega</text>
+
+  <text x="176" y="1268" font-family="Arial, sans-serif" font-size="28" font-weight="900" fill="#27123a">Como o pedido chega para você</text>
+  <g font-family="Arial, sans-serif" font-size="20" fill="#27123a">
+    <rect x="176" y="1304" width="284" height="110" rx="16" fill="#ffffff" stroke="#e8dde8"/>
+    <text x="206" y="1352" font-weight="800">1. Cliente escolhe</text>
+    <text x="206" y="1384" fill="#6d6076">litro, combo e bairro</text>
+    <rect x="498" y="1304" width="284" height="110" rx="16" fill="#ffffff" stroke="#e8dde8"/>
+    <text x="528" y="1352" font-weight="800">2. WhatsApp abre</text>
+    <text x="528" y="1384" fill="#6d6076">pedido já organizado</text>
+    <rect x="820" y="1304" width="284" height="110" rx="16" fill="#ffffff" stroke="#e8dde8"/>
+    <text x="850" y="1352" font-weight="800">3. Moto-entrega</text>
+    <text x="850" y="1384" fill="#6d6076">retira e leva ao cliente</text>
+  </g>
+</svg>
