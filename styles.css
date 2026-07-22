@@ -500,6 +500,14 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   margin-bottom: 3rem;
 }
 
+.hero-trust {
+  max-width: 680px;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
 .hero-stats {
   display: flex;
   gap: 2.5rem;
@@ -574,6 +582,145 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   border-radius: 50%;
   box-shadow: 0 0 10px var(--color-accent);
   animation: pulse 2s ease-in-out infinite;
+}
+
+/* === PROJETOS FUNCIONANDO === */
+.projects-showcase {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(0, 255, 136, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(7, 20, 15, 0.9), rgba(10, 10, 10, 0.98));
+  border-top: 1px solid rgba(0, 255, 136, 0.1);
+  border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.projects-showcase-head {
+  margin-bottom: 2.25rem;
+}
+
+.project-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.project-demo-card {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(145deg, rgba(18, 31, 25, 0.98), rgba(10, 16, 13, 0.98));
+  border: 1px solid rgba(0, 255, 136, 0.17);
+  border-radius: var(--radius-xl);
+  transition: transform var(--t-base), border-color var(--t-base), box-shadow var(--t-base);
+}
+
+.project-demo-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 255, 136, 0.45);
+  box-shadow: 0 22px 55px -25px rgba(0, 255, 136, 0.32);
+}
+
+.project-demo-image {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: #e9efeb;
+}
+
+.project-demo-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform var(--t-slow);
+}
+
+.project-demo-card:hover .project-demo-image img {
+  transform: scale(1.025);
+}
+
+.project-demo-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.35rem;
+}
+
+.project-demo-classification {
+  align-self: flex-start;
+  margin-bottom: 0.65rem;
+  padding: 0.3rem 0.65rem;
+  color: var(--color-accent);
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.project-demo-segment {
+  color: var(--color-accent-2);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.project-demo-body h3 {
+  margin: 0.55rem 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+}
+
+.project-demo-body p {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.project-demo-body ul {
+  display: grid;
+  gap: 0.45rem;
+  margin: 1rem 0 1.25rem;
+  padding: 0;
+  list-style: none;
+  color: #dce9e1;
+  font-size: 0.86rem;
+}
+
+.project-demo-body li::before {
+  content: '✓';
+  margin-right: 0.5rem;
+  color: var(--color-accent);
+  font-weight: 800;
+}
+
+.project-demo-actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
+.project-demo-actions .btn {
+  width: 100%;
+}
+
+.project-demo-secondary {
+  color: var(--color-accent);
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.project-demo-secondary:hover {
+  text-decoration: underline;
+}
+
+.projects-showcase-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
 }
 
 /* === SOBRE === */
@@ -2532,7 +2679,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   }
 
   .hero-image {
-    order: -1;
     width: min(100%, 520px);
     margin: 0 auto;
   }
@@ -2548,8 +2694,15 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
   .hero-content { text-align: center; }
   .hero-cta { justify-content: center; }
+  .hero-trust { margin-right: auto; margin-left: auto; }
   .hero-stats { justify-content: center; }
   .stat { text-align: center; }
+
+  .project-demo-grid {
+    grid-template-columns: 1fr;
+    max-width: 680px;
+    margin: 0 auto;
+  }
 
   .sobre-grid {
     grid-template-columns: 1fr;

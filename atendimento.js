@@ -215,12 +215,7 @@
   const progress = root.querySelector('.pd-assistant-progress span');
 
   function greetingText() {
-    return 'Olá! Eu sou o Hélio, consultor da Propagação Digital.\n' +
-      'Me diga o seu nome e,\n' +
-      'me fale um pouco do seu negócio ou do seu objetivo\n' +
-      'para que eu possa te entender bem e\n' +
-      'indicar a melhor solução pra você!\n' +
-      'Vamos lá! 😄';
+    return 'Olá! Sou o assistente virtual da Propagação Digital. Você está buscando um site, uma loja virtual ou uma forma de divulgar melhor seu negócio? Posso entender sua necessidade, mostrar projetos funcionando e encaminhar você para falar com o Hélio.';
   }
 
   function openAssistant() {
