@@ -1704,17 +1704,20 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .pd-assistant-visual {
   align-self: flex-start;
   width: min(96%, 430px);
+  min-height: 330px;
   overflow: hidden;
   border: 1px solid rgba(0, 255, 136, 0.38);
   border-radius: 12px;
   background: #101612;
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(0, 255, 136, 0.06);
+  cursor: pointer;
   animation: pd-message-in 220ms ease both;
 }
 
 .pd-assistant-visual img {
   display: block;
   width: 100%;
+  min-height: 210px;
   aspect-ratio: 16 / 10;
   object-fit: cover;
   background: #070b09;
@@ -1751,11 +1754,50 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .pd-assistant-visual .pd-assistant-visual-image-link {
   display: block;
   width: 100%;
-  min-height: 0;
+  min-height: 210px;
+  aspect-ratio: 16 / 10;
   margin: 0;
   padding: 0;
   border: 0;
   border-radius: 0;
+}
+
+.pd-assistant-visual .pd-assistant-visual-image-link[hidden] {
+  display: none;
+}
+
+.pd-assistant-visual:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.pd-assistant-visual-error {
+  min-height: 150px;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 190, 92, 0.35);
+  background: rgba(255, 190, 92, 0.08);
+}
+
+.pd-assistant-visual-error strong {
+  color: #fff4dc;
+}
+
+.pd-assistant-visual-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.pd-assistant-visual-error-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(0, 255, 136, 0.42);
+  border-radius: 6px;
+  color: var(--color-accent);
+  text-decoration: none;
 }
 
 .pd-assistant-visual div > a {
@@ -1763,7 +1805,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   align-items: center;
   justify-content: center;
   width: fit-content;
-  min-height: 34px;
+  min-height: 44px;
   margin-top: 0.15rem;
   padding: 0.45rem 0.7rem;
   border: 1px solid rgba(0, 255, 136, 0.42);
@@ -1812,10 +1854,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 .pd-assistant-options {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0 1rem 0.8rem;
-  overflow-x: auto;
-  scrollbar-width: none;
+  overflow: visible;
 }
 
 .pd-assistant-options:empty {
@@ -1828,7 +1870,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 .pd-assistant-options button {
   flex: 0 0 auto;
-  min-height: 38px;
+  min-height: 44px;
   padding: 0.6rem 0.8rem;
   border: 1px solid rgba(0, 255, 136, 0.34);
   border-radius: 6px;

@@ -52,43 +52,28 @@
   };
 
   const visualExamples = {
-    toner: {
-      id: 'toner',
-      title: 'Exemplo visual para toner e cartuchos',
-      image: '/img/exemplo-toner-cartuchos.svg',
-      text: 'Vitrine por modelo de impressora, compatibilidade, preço e botão direto para orçamento no WhatsApp.'
-    },
-    pizzaria: {
-      id: 'pizzaria',
-      title: 'Exemplo visual para pizzaria',
-      image: '/img/exemplo-pizzaria.svg',
-      text: 'Cardapio, combos, oferta do dia e botao direto para pedido no WhatsApp.'
-    },
-    cardapio: {
-      id: 'cardapio',
-      title: 'Exemplo de cardapio digital',
-      image: '/img/exemplo-cardapio-digital.svg',
-      text: 'O cliente escolhe os itens, informa entrega e envia o pedido organizado no WhatsApp.'
-    },
-    loja: {
-      id: 'loja',
-      title: 'Modelo visual de loja virtual real',
-      image: '/img/exemplo-loja-virtual.svg',
-      text: 'Tela de e-commerce com vitrine, produtos, precos, carrinho e finalizacao de pedido pelo celular.'
-    },
-    servico: {
-      id: 'servico',
-      title: 'Exemplo para servico local',
-      image: '/img/exemplo-servico-local.svg',
-      text: 'Pagina focada em confianca, Google local, prova social e pedido de orcamento.'
-    },
-    site: {
-      id: 'site',
-      title: 'Exemplo de site profissional',
-      image: '/img/exemplo-site-profissional.svg',
-      text: 'Apresentacao clara da empresa, servicos, autoridade e chamada para WhatsApp.'
+    fashion: {
+      id: 'fashion',
+      assetId: 'lume-modas-functional-demo',
+      visual: '/img/modelos-lojas/loja-moda-print.jpg',
+      image: '/img/modelos-lojas/loja-moda-print.jpg',
+      path: '/modelos/loja-moda/',
+      title: 'Lume Modas',
+      classification: 'Demonstração funcional',
+      visualStatus: 'ready',
+      text: 'Loja de moda navegável, com catálogo, busca, favoritos, carrinho e pedido pelo WhatsApp.'
     }
   };
+
+  const visuals = Object.values(visualExamples);
+  const recognizedAssetIds = new Set(
+    visuals.map((example) => example.assetId)
+  );
+  const shoeFallback = 'Ainda não tenho um modelo funcional específico de sapataria disponível aqui. Posso mostrar uma loja de moda semelhante, abrir nossa galeria ou encaminhar sua ideia para o Hélio.';
+  const foodFallback = 'Ainda não tenho uma demonstração funcional específica de cardápio ou delivery disponível aqui. Posso abrir nossa galeria ou encaminhar sua ideia para o Hélio.';
+  const genericVisualFallback = 'Ainda não tenho uma demonstração funcional específica para este segmento disponível aqui. Posso abrir nossa galeria ou encaminhar sua ideia para o Hélio.';
+  const visualFailureCount = new Map();
+  let lastVisualOpenAt = 0;
 
   const initialLead = {
     name: '',
@@ -239,6 +224,7 @@
   function resetAssistant() {
     lead = { ...initialLead };
     chatMessages = [];
+    visualFailureCount.clear();
     saveConversation();
     input.disabled = false;
     submitButton.disabled = false;
@@ -253,28 +239,92 @@
     messages.scrollTop = messages.scrollHeight;
   }
 
-  function addVisualToDom(example) {
+  function openVisualTarget(example) {
+    const now = Date.now();
+    if (now - lastVisualOpenAt < 900) return;
+    lastVisualOpenAt = now;
+    window.open(example.path, '_blank', 'noopener');
+  }
+
+  function handleVisualFailure(card, example) {
+    const storedVisual = chatMessages.find((message) => (
+      message.type === 'visual' && message.assetId === example.assetId
+    ));
+    const persistedFailures = Number(storedVisual?.failureCount) || 0;
+    const failureCount = Math.max(
+      visualFailureCount.get(example.assetId) || 0,
+      persistedFailures
+    ) + 1;
+    visualFailureCount.set(example.assetId, failureCount);
+    card.setAttribute('data-visual-status', 'failed');
+    if (storedVisual) {
+      storedVisual.visualStatus = 'failed';
+      storedVisual.failureCount = failureCount;
+      saveConversation();
+    }
+
+    const imageLink = card.querySelector('.pd-assistant-visual-image-link');
+    if (imageLink) imageLink.hidden = true;
+
+    const existingError = card.querySelector('.pd-assistant-visual-error');
+    if (existingError) existingError.remove();
+
+    const error = document.createElement('div');
+    error.className = 'pd-assistant-visual-error';
+    error.setAttribute('role', 'status');
+    error.innerHTML = failureCount >= 2
+      ? `<strong>Não foi possível carregar esta imagem.</strong>
+         <p>Você ainda pode abrir a galeria ou conversar diretamente com o Hélio.</p>
+         <span class="pd-assistant-visual-error-actions">
+           <a href="/galeria-modelos">Abrir galeria</a>
+           <a href="${escapeHtml(buildWhatsappUrl())}" target="_blank" rel="noopener">Continuar no WhatsApp</a>
+         </span>`
+      : `<strong>Não foi possível carregar a prévia.</strong>
+         <p>O projeto continua disponível no botão “Abrir projeto”.</p>`;
+    card.prepend(error);
+  }
+
+  function addVisualToDom(example, visualStatus = 'ready', presentationId = '') {
+    if (!example || !recognizedAssetIds.has(example.assetId)) return null;
+
     const card = document.createElement('article');
     card.className = 'pd-assistant-visual';
     card.setAttribute('data-visual-card', example.id);
+    card.setAttribute('data-asset-id', example.assetId);
+    card.setAttribute('data-visual-status', visualStatus);
+    if (presentationId) card.setAttribute('data-presentation-id', presentationId);
     card.innerHTML = `
-      <a class="pd-assistant-visual-image-link" href="${escapeHtml(example.image)}" target="_blank" rel="noopener" aria-label="Abrir ${escapeHtml(example.title)} em tela cheia">
-        <img src="${escapeHtml(example.image)}" alt="${escapeHtml(example.title)}" loading="eager" />
+      <a class="pd-assistant-visual-image-link" href="${escapeHtml(example.path)}" target="_blank" rel="noopener" aria-label="Abrir ${escapeHtml(example.title)}">
+        <img src="${escapeHtml(example.visual)}" alt="Prévia da ${escapeHtml(example.title)}" loading="eager" />
       </a>
       <div>
-        <span>imagem do modelo</span>
+        <span>${escapeHtml(example.classification)}</span>
         <strong>${escapeHtml(example.title)}</strong>
         <p>${escapeHtml(example.text)}</p>
-        <a href="${escapeHtml(example.image)}" target="_blank" rel="noopener">Abrir imagem maior</a>
-        <small>Se a imagem nao carregar, clique no botao acima para abrir em tela cheia.</small>
+        <a href="${escapeHtml(example.path)}" target="_blank" rel="noopener">Abrir projeto</a>
+        <small>Você pode navegar pela demonstração em uma nova aba.</small>
       </div>
     `;
     const img = card.querySelector('img');
     img.addEventListener('load', () => {
       messages.scrollTop = messages.scrollHeight;
     }, { once: true });
+    img.addEventListener('error', () => {
+      handleVisualFailure(card, example);
+    });
+    card.querySelectorAll('.pd-assistant-visual-image-link, div > a').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        openVisualTarget(example);
+      });
+    });
+    card.addEventListener('click', (event) => {
+      if (event.target.closest('a')) return;
+      openVisualTarget(example);
+    });
     messages.appendChild(card);
     messages.scrollTop = messages.scrollHeight;
+    return card;
   }
 
   function renderConversation() {
@@ -287,8 +337,11 @@
     }
 
     chatMessages.forEach((message) => {
-      if (message.type === 'visual' && visualExamples[message.visualId]) {
-        addVisualToDom(visualExamples[message.visualId]);
+      if (message.type === 'visual') {
+        const example = visualExamples[message.visualId];
+        if (example && message.assetId === example.assetId) {
+          addVisualToDom(example, message.visualStatus, message.presentationId);
+        }
         return;
       }
 
@@ -325,15 +378,17 @@
   function renderActions() {
     options.innerHTML = '';
 
-    if (lead.name || lead.business || lead.goal || lead.service) {
+    const visualAction = getVisualContext('', '').example;
+    if (visualAction) {
       addAction('Ver modelo visual', () => {
         showVisualForCurrentContext();
       });
     }
 
-    if (lead.service && services[lead.service]) {
-      addAction('Ver pagina do servico', () => {
-        window.location.href = services[lead.service].path;
+    const serviceAction = resolveServiceAction();
+    if (serviceAction) {
+      addAction(serviceAction.label, () => {
+        window.location.href = serviceAction.path;
       });
     }
 
@@ -352,7 +407,7 @@
     options.appendChild(button);
   }
 
-  function selectVisualExample(userText, replyText) {
+  function getVisualContext(userText, replyText) {
     const currentUserText = normalizeMatch(userText);
     const combined = normalizeMatch([
       userText,
@@ -366,39 +421,109 @@
     const explicitVisualRequest = isExplicitVisualRequest(currentUserText);
     const askedForVisual = explicitVisualRequest || /(cardapio|cardapio digital|loja virtual|site)/.test(combined);
     const hasContext = Boolean(lead.business || lead.product || lead.service);
-    if (!askedForVisual && !hasContext) return null;
+    if (!askedForVisual && !hasContext) return { example: null, notice: '' };
 
-    let id = 'site';
-    if (/(toner|cartucho|impressora|impressoras|suprimento|hp|brother|samsung|epson)/.test(combined)) id = 'toner';
-    else if (/(pizza|pizzaria|esfiha|hamburg|lanche|delivery|marmita)/.test(combined)) id = 'pizzaria';
-    else if (/(acai|comida|cardapio|pedido|delivery|marmita|lanche)/.test(combined)) id = 'cardapio';
-    else if (/(loja virtual|ecommerce|e-commerce|produto|roupa|calcado|sapato|colch|toner|cartucho|catalogo|vender online)/.test(combined)) id = 'loja';
-    else if (/(barbearia|salao|clinica|oficina|assistencia|servico|orcamento|prestador|consultorio)/.test(combined)) id = 'servico';
-    else if (lead.service === 'lojas') id = 'loja';
-    else if (lead.service === 'landing') id = 'cardapio';
-    else if (lead.service === 'sites' || lead.service === 'seo') id = 'site';
+    const isShoe = /(sapataria|sapato|calcado|calçado|tenis|tênis)/.test(combined);
+    const isFashion = isShoe || /(roupa|moda|vestuario|vestuário|boutique)/.test(combined);
+    const isFood = /(acai|açaí|comida|cardapio|cardápio|pizza|pizzaria|lanche|delivery|marmita|restaurante)/.test(combined);
+    if (isFashion) {
+      return {
+        example: visualExamples.fashion,
+        notice: isShoe ? shoeFallback : ''
+      };
+    }
+    if (isFood) {
+      return {
+        example: null,
+        notice: explicitVisualRequest ? foodFallback : ''
+      };
+    }
 
-    const alreadyShown = chatMessages.some((message) => message.type === 'visual' && message.visualId === id);
-    if (alreadyShown && !explicitVisualRequest) return null;
-
-    return visualExamples[id];
+    return {
+      example: null,
+      notice: explicitVisualRequest ? genericVisualFallback : ''
+    };
   }
 
-  function showVisualForCurrentContext() {
-    const visual = selectVisualExample('quero ver uma imagem do modelo visual', '');
-    if (!visual) return;
+  function selectVisualExample(userText, replyText) {
+    return getVisualContext(userText, replyText).example;
+  }
 
-    const reply = 'Aqui esta um modelo visual. Se nao carregar, toque em Abrir imagem maior.';
-    chatMessages.push({ role: 'assistant', content: reply });
+  function hasVisualBeenShown(assetId) {
+    return chatMessages.some((message) => (
+      message.type === 'visual' &&
+      message.assetId === assetId &&
+      message.visualStatus !== 'removed'
+    ));
+  }
+
+  function presentVisualOnce(example) {
+    if (!example || !recognizedAssetIds.has(example.assetId)) return null;
+
+    const existingCard = messages.querySelector(`[data-asset-id="${example.assetId}"]`);
+    if (existingCard || hasVisualBeenShown(example.assetId)) {
+      const card = existingCard || messages.querySelector(`[data-visual-card="${example.id}"]`);
+      card?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      card?.focus({ preventScroll: true });
+      return card;
+    }
+
+    const presentationId = `${example.assetId}-${Date.now()}`;
     chatMessages.push({
       role: 'assistant',
       type: 'visual',
-      visualId: visual.id,
-      content: `Exemplo visual mostrado: ${visual.title}`
+      visualId: example.id,
+      assetId: example.assetId,
+      presentationId,
+      visual: example.visual,
+      visualStatus: example.visualStatus,
+      content: `Demonstração apresentada: ${example.title}`
     });
-    addMessageToDom(reply, 'bot');
-    addVisualToDom(visual);
+    const card = addVisualToDom(example, example.visualStatus, presentationId);
     saveConversation();
+    return card;
+  }
+
+  function presentNoticeOnce(notice) {
+    if (!notice) return;
+    const alreadyShown = chatMessages.some((message) => (
+      message.type === 'visual-notice' && message.content === notice
+    ));
+    if (alreadyShown) return;
+    chatMessages.push({ role: 'assistant', type: 'visual-notice', content: notice });
+    addMessageToDom(notice, 'bot');
+  }
+
+  function resolveServiceAction() {
+    const context = normalizeMatch([
+      lead.business,
+      lead.goal,
+      lead.product,
+      lead.service
+    ].filter(Boolean).join(' '));
+
+    if (/(roupa|moda|vestuario|boutique|sapataria|sapato|calcado|tenis)/.test(context)) {
+      return { label: 'Abrir demonstração de moda', path: '/modelos/loja-moda/' };
+    }
+    if (/(acai|comida|cardapio|pizza|pizzaria|lanche|delivery|marmita|restaurante)/.test(context)) {
+      return { label: 'Conhecer a galeria', path: '/galeria-modelos' };
+    }
+    if (lead.service === 'lojas') {
+      return { label: 'Ver página do serviço', path: '/lojas-virtuais' };
+    }
+    if (lead.service === 'sites' || /(site institucional|site profissional)/.test(context)) {
+      return { label: 'Ver página do serviço', path: '/criacao-de-sites-belem' };
+    }
+    if (lead.service && services[lead.service]) {
+      return { label: 'Ver página do serviço', path: services[lead.service].path };
+    }
+    return null;
+  }
+
+  function showVisualForCurrentContext() {
+    const { example } = getVisualContext('quero ver uma imagem do modelo visual', '');
+    if (example) presentVisualOnce(example);
+    else messages.scrollTo({ top: messages.scrollHeight, behavior: 'smooth' });
   }
 
   async function submitMessage(text) {
@@ -429,21 +554,17 @@
       chatMessages.push({ role: 'assistant', content: reply });
       if (typing) typing.remove();
       addMessageToDom(reply, 'bot');
-      const visual = selectVisualExample(content, reply);
-      if (visual) {
-        chatMessages.push({ role: 'assistant', type: 'visual', visualId: visual.id, content: `Exemplo visual mostrado: ${visual.title}` });
-        addVisualToDom(visual);
-      }
+      const visualContext = getVisualContext(content, reply);
+      presentNoticeOnce(visualContext.notice);
+      if (visualContext.example) presentVisualOnce(visualContext.example);
     } catch {
       const reply = fallbackReply(content);
       chatMessages.push({ role: 'assistant', content: reply });
       if (typing) typing.remove();
       addMessageToDom(reply, 'bot');
-      const visual = selectVisualExample(content, reply);
-      if (visual) {
-        chatMessages.push({ role: 'assistant', type: 'visual', visualId: visual.id, content: `Exemplo visual mostrado: ${visual.title}` });
-        addVisualToDom(visual);
-      }
+      const visualContext = getVisualContext(content, reply);
+      presentNoticeOnce(visualContext.notice);
+      if (visualContext.example) presentVisualOnce(visualContext.example);
     } finally {
       saveConversation();
       updateProgress();
