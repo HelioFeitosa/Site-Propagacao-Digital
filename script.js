@@ -133,7 +133,7 @@
     const targets = document.querySelectorAll(
       '.section-title, .section-sub, .eyebrow, .service-card, .case-card, ' +
       '.process-step, .diff-item, .faq-item, .visual-card, .col-text, ' +
-      '.hero-badge, .hero-cta, .hero-stats, .cases-cta, .cta-title, .cta-sub, ' +
+      '.hero-stats, .cases-cta, .cta-title, .cta-sub, ' +
       '.cta-buttons, .cta-contact-info, .footer-brand, .footer-col'
     );
 

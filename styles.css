@@ -2823,8 +2823,10 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
   .pd-assistant-launcher {
     right: 0.85rem;
     bottom: 0.85rem;
+    justify-content: center;
+    width: 54px;
     min-height: 54px;
-    padding: 0.45rem 0.8rem 0.45rem 0.45rem;
+    padding: 0;
   }
 
   .whatsapp-float.is-visible ~ .pd-assistant-root .pd-assistant-launcher {
@@ -2836,8 +2838,30 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     height: 40px;
   }
 
-  .pd-assistant-launcher-copy small {
+  .pd-assistant-launcher-copy {
     display: none;
+  }
+
+  .pd-assistant-launcher::before {
+    content: 'PD';
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    color: var(--color-accent);
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    font-weight: 800;
+    border: 1px solid var(--color-accent);
+    border-radius: 50%;
+    background: rgba(0, 255, 136, 0.08);
+  }
+
+  .pd-assistant-launcher-status {
+    position: absolute;
+    right: 4px;
+    bottom: 5px;
+    margin: 0;
   }
 
   .pd-assistant {
