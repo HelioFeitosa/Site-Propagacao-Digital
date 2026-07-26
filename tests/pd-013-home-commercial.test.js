@@ -74,7 +74,7 @@ for (const unsupportedClaim of ['resultados reais', 'vende muito mais', 'Projeto
 assert.ok(!/\.hero-image\s*\{[^}]*order:\s*-1/s.test(styles), 'Imagem não pode vir antes do conteúdo no mobile');
 assert.match(styles, /\.whatsapp-float\.is-visible\s*~\s*\.pd-assistant-root\s+\.pd-assistant-launcher/);
 
-const greeting = 'Olá! Sou o assistente virtual da Propagação Digital.\n Você está buscando um site, uma loja virtual\nou uma forma de divulgar melhor seu negócio?\nMe diga o que você precisa pra eu mostrar a melhor solução pra você !.';
+const greeting = 'Olá! Sou o assistente virtual da Propagação Digital.\n\nVocê está procurando um site, uma loja virtual ou quer divulgar melhor o seu negócio?\n\nMe conte o que você precisa. Vou entender o seu objetivo, mostrar alguns projetos semelhantes e indicar a melhor solução para a sua empresa.';
 assert.ok(
   attendant.includes(JSON.stringify(greeting).slice(1, -1)),
   'Mensagem inicial do atendente não corresponde à missão'

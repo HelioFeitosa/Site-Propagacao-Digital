@@ -200,7 +200,7 @@
   const progress = root.querySelector('.pd-assistant-progress span');
 
   function greetingText() {
-    return 'Olá! Sou o assistente virtual da Propagação Digital.\n Você está buscando um site, uma loja virtual\nou uma forma de divulgar melhor seu negócio?\nMe diga o que você precisa pra eu mostrar a melhor solução pra você !.';
+    return 'Olá! Sou o assistente virtual da Propagação Digital.\n\nVocê está procurando um site, uma loja virtual ou quer divulgar melhor o seu negócio?\n\nMe conte o que você precisa. Vou entender o seu objetivo, mostrar alguns projetos semelhantes e indicar a melhor solução para a sua empresa.';
   }
 
   function openAssistant() {
