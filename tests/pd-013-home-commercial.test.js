@@ -74,7 +74,10 @@ for (const unsupportedClaim of ['resultados reais', 'vende muito mais', 'Projeto
 assert.ok(!/\.hero-image\s*\{[^}]*order:\s*-1/s.test(styles), 'Imagem não pode vir antes do conteúdo no mobile');
 assert.match(styles, /\.whatsapp-float\.is-visible\s*~\s*\.pd-assistant-root\s+\.pd-assistant-launcher/);
 
-const greeting = 'Olá! Sou o assistente virtual da Propagação Digital. Você está buscando um site, uma loja virtual ou uma forma de divulgar melhor seu negócio? Posso entender sua necessidade, mostrar projetos funcionando e encaminhar você para falar com o Hélio.';
-assert.ok(attendant.includes(greeting), 'Mensagem inicial do atendente não corresponde à missão');
+const greeting = 'Olá! Sou o assistente virtual da Propagação Digital.\n Você está buscando um site, uma loja virtual\nou uma forma de divulgar melhor seu negócio?\nMe diga o que você precisa pra eu mostrar a melhor solução pra você !.';
+assert.ok(
+  attendant.includes(JSON.stringify(greeting).slice(1, -1)),
+  'Mensagem inicial do atendente não corresponde à missão'
+);
 
 console.log('PD-013 Home comercial structural tests passed.');
