@@ -44,6 +44,7 @@ function staticServer() {
 
 async function makePage(browser, baseUrl, viewport) {
   const page = await browser.newPage({ viewport });
+  page.setDefaultNavigationTimeout(60000);
   const consoleErrors = [];
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());
@@ -128,6 +129,24 @@ async function submit(page, text) {
       assert.equal(consoleErrors.length, 0);
       await page.close();
     }
+
+    const greetingMigration = await makePage(browser, baseUrl, { width: 390, height: 844 });
+    await greetingMigration.page.evaluate(() => {
+      sessionStorage.setItem('pd-assistente-helio-v2', JSON.stringify({
+        lead: {},
+        messages: [{
+          role: 'assistant',
+          content: 'Olá! Sou o assistente virtual da Propagação Digital. Você está buscando um site, uma loja virtual ou uma forma de divulgar melhor seu negócio? Posso entender sua necessidade, mostrar projetos funcionando e encaminhar você para falar com o Hélio.'
+        }]
+      }));
+    });
+    await greetingMigration.page.reload({ waitUntil: 'domcontentloaded' });
+    await greetingMigration.page.click('.pd-assistant-launcher');
+    assert.equal(
+      await greetingMigration.page.locator('.pd-assistant-message.is-bot').first().innerText(),
+      'Olá! Sou o assistente virtual da Propagação Digital.\n\nVocê está procurando um site, uma loja virtual ou quer divulgar melhor o seu negócio?\n\nMe conte o que você precisa. Vou entender o seu objetivo, mostrar alguns projetos semelhantes e indicar a melhor solução para a sua empresa.'
+    );
+    await greetingMigration.page.close();
 
     const shoe = await makePage(browser, baseUrl, { width: 390, height: 844 });
     await shoe.page.click('.pd-assistant-launcher');

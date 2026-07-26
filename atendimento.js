@@ -7,6 +7,10 @@
   const API_ENDPOINT = '/api/atendimento';
   const TYPING_APPEAR_DELAY_MS = 3000;
   const RESPONSE_DELAY_MS = 10000;
+  const LEGACY_GREETING_TEXTS = new Set([
+    'Olá! Sou o assistente virtual da Propagação Digital. Você está buscando um site, uma loja virtual ou uma forma de divulgar melhor seu negócio? Posso entender sua necessidade, mostrar projetos funcionando e encaminhar você para falar com o Hélio.',
+    'Olá! Sou o assistente virtual da Propagação Digital.\n Você está buscando um site, uma loja virtual\nou uma forma de divulgar melhor seu negócio?\nMe diga o que você precisa pra eu mostrar a melhor solução pra você !.'
+  ]);
 
   const services = {
     sites: {
@@ -99,12 +103,22 @@
   function loadConversation() {
     try {
       const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
+      const messages = Array.isArray(saved.messages) ? saved.messages : [];
+      const firstMessage = messages[0];
+      const greetingMigrated = Boolean(
+        firstMessage?.role === 'assistant' &&
+        LEGACY_GREETING_TEXTS.has(firstMessage.content)
+      );
+      if (greetingMigrated) {
+        messages[0] = { ...firstMessage, content: greetingText() };
+      }
       return {
         lead: { ...initialLead, ...(saved.lead || {}) },
-        messages: Array.isArray(saved.messages) ? saved.messages : []
+        messages,
+        greetingMigrated
       };
     } catch {
-      return { lead: { ...initialLead }, messages: [] };
+      return { lead: { ...initialLead }, messages: [], greetingMigrated: false };
     }
   }
 
@@ -116,8 +130,9 @@
   }
 
   const visitorId = loadVisitorId();
-  let { lead, messages: chatMessages } = loadConversation();
+  let { lead, messages: chatMessages, greetingMigrated } = loadConversation();
   let isSending = false;
+  if (greetingMigrated) saveConversation();
 
   function escapeHtml(value) {
     return String(value)
