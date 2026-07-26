@@ -5,7 +5,7 @@
   "scripts": {
     "start": "npx serve .",
     "build": "node -e \"console.log('Static site: no build step required')\"",
-    "test": "node tests/atendimento-context.test.js && node tests/client-memory.test.js"
+    "test": "node tests/atendimento-context.test.js && node tests/client-memory.test.js && node tests/pd-013-home-commercial.test.js && node tests/pd-014-sales-ready.test.js"
   },
   "dependencies": {
     "@upstash/redis": "^1.38.0"
