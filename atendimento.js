@@ -9,7 +9,8 @@
   const RESPONSE_DELAY_MS = 10000;
   const LEGACY_GREETING_TEXTS = new Set([
     'Olá! Sou o assistente virtual da Propagação Digital. Você está buscando um site, uma loja virtual ou uma forma de divulgar melhor seu negócio? Posso entender sua necessidade, mostrar projetos funcionando e encaminhar você para falar com o Hélio.',
-    'Olá! Sou o assistente virtual da Propagação Digital.\n Você está buscando um site, uma loja virtual\nou uma forma de divulgar melhor seu negócio?\nMe diga o que você precisa pra eu mostrar a melhor solução pra você !.'
+    'Olá! Sou o assistente virtual da Propagação Digital.\n Você está buscando um site, uma loja virtual\nou uma forma de divulgar melhor seu negócio?\nMe diga o que você precisa pra eu mostrar a melhor solução pra você !.',
+    'Olá! Sou o assistente virtual da Propagação Digital.\n\nVocê está procurando um site, uma loja virtual ou quer divulgar melhor o seu negócio?\n\nMe conte o que você precisa. Vou entender o seu objetivo, mostrar alguns projetos semelhantes e indicar a melhor solução para a sua empresa.'
   ]);
 
   const services = {
@@ -80,6 +81,22 @@
   let lastVisualOpenAt = 0;
 
   const initialLead = {
+    commercialVersion: 1,
+    customerName: '',
+    nameDeclined: false,
+    businessType: null,
+    productsOrServices: '',
+    salesChannels: '',
+    goals: '',
+    pace: 'NORMAL',
+    diagnosisConfirmed: false,
+    visualRequested: false,
+    visualStatus: 'UNKNOWN',
+    visualAssetId: null,
+    userReportedVisualMissing: false,
+    galleryInterest: false,
+    whatsappInterest: false,
+    humanHandoffRequested: false,
     name: '',
     business: '',
     goal: '',
@@ -103,19 +120,23 @@
   function loadConversation() {
     try {
       const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
-      const messages = Array.isArray(saved.messages) ? saved.messages : [];
+      let messages = Array.isArray(saved.messages) ? saved.messages : [];
       const firstMessage = messages[0];
-      const greetingMigrated = Boolean(
+      const legacyGreetingMigrated = Boolean(
         firstMessage?.role === 'assistant' &&
         LEGACY_GREETING_TEXTS.has(firstMessage.content)
       );
-      if (greetingMigrated) {
+      const stateMigrated = saved.lead?.commercialVersion !== 1;
+      if (legacyGreetingMigrated) {
         messages[0] = { ...firstMessage, content: greetingText() };
       }
+      if (stateMigrated) messages = [];
       return {
-        lead: { ...initialLead, ...(saved.lead || {}) },
+        lead: stateMigrated
+          ? { ...initialLead }
+          : { ...initialLead, ...(saved.lead || {}) },
         messages,
-        greetingMigrated
+        greetingMigrated: legacyGreetingMigrated || stateMigrated
       };
     } catch {
       return { lead: { ...initialLead }, messages: [], greetingMigrated: false };
@@ -195,7 +216,7 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 20.5 3l-5.8 18-3.2-7-8.5-2.5Zm8.5 2.5 9-11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </form>
-        <p class="pd-assistant-privacy">O Hélio guarda um resumo comercial por até 12 meses para continuar seu atendimento. Para apagar, escreva “esqueça meus dados”.</p>
+        <p class="pd-assistant-privacy">Esta conversa fica salva apenas nesta aba durante a sessão. Use o botão de reiniciar para começar de novo.</p>
       </section>
     `;
     document.body.appendChild(root);
@@ -215,7 +236,7 @@
   const progress = root.querySelector('.pd-assistant-progress span');
 
   function greetingText() {
-    return 'Olá! Sou o assistente virtual da Propagação Digital.\n\nVocê está procurando um site, uma loja virtual ou quer divulgar melhor o seu negócio?\n\nMe conte o que você precisa. Vou entender o seu objetivo, mostrar alguns projetos semelhantes e indicar a melhor solução para a sua empresa.';
+    return 'Olá! Sou o assistente virtual da Propagação Digital.\n\nEstou aqui para conhecer melhor o seu negócio e ajudar você a encontrar uma solução que realmente faça sentido.\n\nPara começarmos, como você gostaria que eu te chamasse?';
   }
 
   function openAssistant() {
@@ -271,6 +292,8 @@
       persistedFailures
     ) + 1;
     visualFailureCount.set(example.assetId, failureCount);
+    lead.visualStatus = 'FAILED';
+    lead.userReportedVisualMissing = true;
     card.setAttribute('data-visual-status', 'failed');
     if (storedVisual) {
       storedVisual.visualStatus = 'failed';
@@ -287,12 +310,15 @@
     const error = document.createElement('div');
     error.className = 'pd-assistant-visual-error';
     error.setAttribute('role', 'status');
+    const whatsappFallback = lead.whatsappInterest || lead.humanHandoffRequested
+      ? `<a href="${escapeHtml(buildWhatsappUrl())}" target="_blank" rel="noopener">Continuar no WhatsApp</a>`
+      : '';
     error.innerHTML = failureCount >= 2
       ? `<strong>Não foi possível carregar esta imagem.</strong>
          <p>Você ainda pode abrir a galeria ou conversar diretamente com o Hélio.</p>
          <span class="pd-assistant-visual-error-actions">
            <a href="/galeria-modelos">Abrir galeria</a>
-           <a href="${escapeHtml(buildWhatsappUrl())}" target="_blank" rel="noopener">Continuar no WhatsApp</a>
+           ${whatsappFallback}
          </span>`
       : `<strong>Não foi possível carregar a prévia.</strong>
          <p>O projeto continua disponível no botão “Abrir projeto”.</p>`;
@@ -393,7 +419,9 @@
   function renderActions() {
     options.innerHTML = '';
 
-    const visualAction = getVisualContext('', '').example;
+    const visualAction = lead.diagnosisConfirmed && lead.visualRequested && lead.visualStatus === 'READY'
+      ? getVisualContext('', '').example
+      : null;
     if (visualAction) {
       addAction('Ver modelo visual', () => {
         showVisualForCurrentContext();
@@ -401,13 +429,20 @@
     }
 
     const serviceAction = resolveServiceAction();
+    const needsGallery = lead.galleryInterest || lead.visualStatus === 'UNAVAILABLE' || lead.visualStatus === 'FAILED';
+    if (needsGallery && serviceAction?.label !== 'Conhecer a galeria') {
+      addAction('Conhecer a galeria', () => {
+        window.location.href = '/galeria-modelos';
+      });
+    }
+
     if (serviceAction) {
       addAction(serviceAction.label, () => {
         window.location.href = serviceAction.path;
       });
     }
 
-    if (lead.name || lead.business || lead.goal || lead.service) {
+    if (lead.whatsappInterest || lead.humanHandoffRequested) {
       addAction('Continuar no WhatsApp', () => {
         window.open(buildWhatsappUrl(), '_blank', 'noopener');
       });
@@ -428,12 +463,22 @@
       userText,
       replyText,
       lead.business,
+      lead.businessType,
+      lead.productsOrServices,
       lead.goal,
       lead.product,
       lead.service
     ].filter(Boolean).join(' '));
 
     const explicitVisualRequest = isExplicitVisualRequest(currentUserText);
+    if (
+      !lead.diagnosisConfirmed ||
+      !lead.visualRequested ||
+      lead.visualStatus !== 'READY' ||
+      !recognizedAssetIds.has(lead.visualAssetId)
+    ) {
+      return { example: null, notice: '' };
+    }
     const askedForVisual = explicitVisualRequest || /(cardapio|cardapio digital|loja virtual|site)/.test(combined);
     const hasContext = Boolean(lead.business || lead.product || lead.service);
     if (!askedForVisual && !hasContext) return { example: null, notice: '' };
@@ -510,6 +555,7 @@
   }
 
   function resolveServiceAction() {
+    if (lead.commercialVersion === 1 && !lead.diagnosisConfirmed) return null;
     const context = normalizeMatch([
       lead.business,
       lead.goal,
@@ -564,7 +610,10 @@
       const [resultStatus] = await Promise.allSettled([resultPromise, wait(RESPONSE_DELAY_MS)]);
       if (resultStatus.status === 'rejected') throw resultStatus.reason;
       const result = resultStatus.value;
-      if (result.lead) lead = { ...lead, ...result.lead };
+      if (result.lead) {
+        lead = { ...lead, ...result.lead };
+        if (lead.customerName) lead.name = lead.customerName;
+      }
       const reply = result.reply || fallbackReply(content);
       chatMessages.push({ role: 'assistant', content: reply });
       if (typing) typing.remove();
@@ -689,10 +738,13 @@
       .join('\n');
 
     const message = [
-      `Olá, sou ${lead.name || 'um visitante do site'}. Falei com o Hélio no site da Propagação Digital.`,
+      `Olá, sou ${lead.customerName || lead.name || 'um visitante do site'}. Conversei com o assistente virtual da Propagação Digital.`,
       '',
-      `Nome: ${lead.name || 'Não informado'}`,
-      `Negócio/objetivo: ${lead.business || lead.goal || 'Não informado'}`,
+      `Nome: ${lead.customerName || lead.name || 'Não informado'}`,
+      `Negócio: ${lead.businessType || lead.business || 'Não informado'}`,
+      `Produtos/serviços: ${lead.productsOrServices || lead.product || 'Não informado'}`,
+      `Canais atuais: ${lead.salesChannels || lead.channel || 'Não informado'}`,
+      `Objetivo: ${lead.goals || lead.goal || 'Não informado'}`,
       `Solução indicada: ${service}`,
       `Urgência: ${lead.urgency || 'Não informada'}`,
       `Investimento/valor comentado: ${lead.budget || 'Não informado'}`,

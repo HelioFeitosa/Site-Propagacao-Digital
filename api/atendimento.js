@@ -13,6 +13,9 @@ const {
   saveClientMemory,
   safeVisitorId
 } = require('../lib/client-memory');
+const {
+  advanceCommercialConversation
+} = require('../lib/commercial-conversation');
 
 const rateLimit = new Map();
 
@@ -1146,6 +1149,7 @@ module.exports = async function handler(req, res) {
     }
 
     const clientLead = { ...(body.lead || {}) };
+    const isCommercialV1 = body.legacyMode !== true;
     delete clientLead.returningClient;
     delete clientLead.previousSummary;
     delete clientLead.memoryLastContact;
@@ -1153,21 +1157,25 @@ module.exports = async function handler(req, res) {
     let storedMemory = null;
     let recalledMemory = null;
 
-    try {
-      storedMemory = await loadVisitorMemory(visitorId);
-      const recallIdentity = extractRecallIdentity(lastUserText);
-      if (recallIdentity) {
-        recalledMemory = await findReturningMemory(recallIdentity.name, recallIdentity.businessHint);
+    if (!isCommercialV1) {
+      try {
+        storedMemory = await loadVisitorMemory(visitorId);
+        const recallIdentity = extractRecallIdentity(lastUserText);
+        if (recallIdentity) {
+          recalledMemory = await findReturningMemory(recallIdentity.name, recallIdentity.businessHint);
+        }
+      } catch (error) {
+        console.error('[pd-client-memory-load]', error.message);
       }
-    } catch (error) {
-      console.error('[pd-client-memory-load]', error.message);
     }
 
-    const activeMemory = recalledMemory || storedMemory;
-    const lead = updateLead({
-      ...(activeMemory?.lead || {}),
-      ...clientLead
-    }, messages);
+    const activeMemory = isCommercialV1 ? null : (recalledMemory || storedMemory);
+    const lead = isCommercialV1
+      ? { ...clientLead, commercialVersion: 1 }
+      : updateLead({
+        ...(activeMemory?.lead || {}),
+        ...clientLead
+      }, messages);
 
     if (recalledMemory) {
       lead.returningClient = true;
@@ -1184,7 +1192,12 @@ module.exports = async function handler(req, res) {
     let reply = '';
     let provider = OPENAI_API_KEY ? 'fallback' : 'missing-openai-key';
 
-    if (OPENAI_API_KEY) {
+    if (isCommercialV1) {
+      const commercialResult = advanceCommercialConversation(clientLead, lastUserText);
+      Object.assign(lead, commercialResult.state);
+      reply = commercialResult.reply;
+      provider = 'commercial-state';
+    } else if (OPENAI_API_KEY) {
       try {
         reply = await callOpenAI(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
         if (reply) {
@@ -1217,13 +1230,15 @@ module.exports = async function handler(req, res) {
     const finalReply = formatForChatReadability(reply || fallbackReply(lead, lastUserText, messages));
     let memorySaved = false;
 
-    try {
-      memorySaved = await saveClientMemory(visitorId, lead, [
-        ...messages,
-        { role: 'assistant', content: finalReply }
-      ]);
-    } catch (error) {
-      console.error('[pd-client-memory-save]', error.message);
+    if (!isCommercialV1) {
+      try {
+        memorySaved = await saveClientMemory(visitorId, lead, [
+          ...messages,
+          { role: 'assistant', content: finalReply }
+        ]);
+      } catch (error) {
+        console.error('[pd-client-memory-save]', error.message);
+      }
     }
 
     return sendJson(res, 200, {

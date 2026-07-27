@@ -28,7 +28,7 @@ function response(resolve) {
 
 async function call(messages, lead = {}) {
   return new Promise(async (resolve) => {
-    await handler(request({ lead, messages, page: 'Home', path: '/' }), response(resolve));
+    await handler(request({ legacyMode: true, lead, messages, page: 'Home', path: '/' }), response(resolve));
   });
 }
 

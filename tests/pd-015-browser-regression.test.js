@@ -6,7 +6,7 @@ const path = require('node:path');
 
 let chromium;
 try {
-  ({ chromium } = require('playwright'));
+  ({ chromium } = require('playwright-core'));
 } catch {
   throw new Error('Playwright não encontrado. Defina NODE_PATH para um runtime que contenha playwright.');
 }
@@ -65,12 +65,34 @@ async function makePage(browser, baseUrl, viewport) {
     const last = (body.messages || []).filter((message) => message.role === 'user').at(-1)?.content || '';
     const food = /açaí|acai|cardápio|cardapio|delivery/i.test(last) ||
       /açaí|acai|delivery/i.test(body.lead?.business || '');
+    const visualRequested = /mostre|quero ver|modelo|cardápio|cardapio/i.test(last);
     const lead = food
-      ? { ...body.lead, business: 'Tenho uma loja de açaí e trabalho com delivery', product: 'açaí', service: 'lojas' }
-      : { ...body.lead, business: 'Tenho uma sapataria e vendo sapatos', product: 'sapatos', service: 'lojas' };
-    const reply = food
-      ? 'Entendi. Posso orientar a estrutura de cardápio e delivery para o seu negócio.'
-      : 'Vou usar uma demonstração de moda semelhante como referência.';
+      ? {
+        ...body.lead,
+        business: 'Tenho uma loja de açaí e trabalho com delivery',
+        businessType: 'restaurante/delivery',
+        product: 'açaí',
+        service: 'lojas',
+        diagnosisConfirmed: true,
+        visualRequested,
+        visualStatus: visualRequested ? 'UNAVAILABLE' : 'UNKNOWN'
+      }
+      : {
+        ...body.lead,
+        business: 'Tenho uma sapataria e vendo sapatos',
+        businessType: 'sapataria',
+        product: 'sapatos',
+        service: 'lojas',
+        diagnosisConfirmed: true,
+        visualRequested,
+        visualStatus: visualRequested ? 'READY' : 'UNKNOWN',
+        visualAssetId: visualRequested ? 'lume-modas-functional-demo' : null
+      };
+    const reply = food && visualRequested
+      ? 'Ainda não tenho uma demonstração funcional específica de cardápio ou delivery disponível aqui. Posso abrir nossa galeria ou encaminhar sua ideia para o Hélio.'
+      : food
+        ? 'Entendi. Posso orientar a estrutura de cardápio e delivery para o seu negócio.'
+        : 'Vou usar uma demonstração de moda semelhante como referência.';
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -110,7 +132,22 @@ async function submit(page, text) {
       const { page, consoleErrors } = await makePage(browser, baseUrl, viewport);
       await page.evaluate(() => {
         sessionStorage.setItem('pd-assistente-helio-v2', JSON.stringify({
-          lead: { name: 'João', business: 'sapataria', goal: 'vender online', service: 'lojas' },
+          lead: {
+            commercialVersion: 1,
+            customerName: 'João',
+            name: 'João',
+            business: 'sapataria',
+            businessType: 'sapataria',
+            productsOrServices: 'sapatos',
+            goal: 'vender online',
+            goals: 'vender online',
+            salesChannels: 'loja física',
+            service: 'lojas',
+            diagnosisConfirmed: true,
+            visualRequested: true,
+            visualStatus: 'READY',
+            visualAssetId: 'lume-modas-functional-demo'
+          },
           messages: []
         }));
       });
@@ -144,7 +181,7 @@ async function submit(page, text) {
     await greetingMigration.page.click('.pd-assistant-launcher');
     assert.equal(
       await greetingMigration.page.locator('.pd-assistant-message.is-bot').first().innerText(),
-      'Olá! Sou o assistente virtual da Propagação Digital.\n\nVocê está procurando um site, uma loja virtual ou quer divulgar melhor o seu negócio?\n\nMe conte o que você precisa. Vou entender o seu objetivo, mostrar alguns projetos semelhantes e indicar a melhor solução para a sua empresa.'
+      'Olá! Sou o assistente virtual da Propagação Digital.\n\nEstou aqui para conhecer melhor o seu negócio e ajudar você a encontrar uma solução que realmente faça sentido.\n\nPara começarmos, como você gostaria que eu te chamasse?'
     );
     await greetingMigration.page.close();
 
@@ -183,7 +220,18 @@ async function submit(page, text) {
     const failure = await makePage(browser, baseUrl, { width: 390, height: 844 });
     await failure.page.evaluate(() => {
       sessionStorage.setItem('pd-assistente-helio-v2', JSON.stringify({
-        lead: { business: 'sapataria', goal: 'vender online', service: 'lojas' },
+        lead: {
+          commercialVersion: 1,
+          business: 'sapataria',
+          businessType: 'sapataria',
+          productsOrServices: 'sapatos',
+          goal: 'vender online',
+          service: 'lojas',
+          diagnosisConfirmed: true,
+          visualRequested: true,
+          visualStatus: 'READY',
+          visualAssetId: 'lume-modas-functional-demo'
+        },
         messages: []
       }));
     });
@@ -197,7 +245,7 @@ async function submit(page, text) {
     await failure.page.waitForSelector('.pd-assistant-visual-error-actions');
     assert.equal(await failure.page.locator('.pd-assistant-visual-error').count(), 1);
     assert.equal(await failure.page.getByRole('link', { name: 'Abrir galeria' }).count(), 1);
-    assert.equal(await failure.page.getByRole('link', { name: 'Continuar no WhatsApp' }).count(), 1);
+    assert.equal(await failure.page.getByRole('link', { name: 'Continuar no WhatsApp' }).count(), 0);
     await failure.page.close();
 
     console.log(`PD-015 browser regression tests passed. Captures: ${os.tmpdir()}`);
