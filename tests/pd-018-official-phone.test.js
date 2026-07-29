@@ -6,6 +6,16 @@ const root = path.join(__dirname, '..');
 const officialPhone = '5591984487207';
 const supersededPhone = '5591987137397';
 const incorrectPhone = '5591984487202';
+const officialVisiblePhone = '(91) 9 8448-7207';
+const supersededHomePhonePatterns = [
+  '(91) 9 8713-7397',
+  '(91) 98713-7397',
+  '9 8713-7397',
+  '98713-7397',
+  '8713-7397',
+  '91987137397',
+  '+55-91-98713-7397'
+];
 const officialPages = [
   'index.html',
   'agentes-de-atendimento.html',
@@ -42,6 +52,28 @@ for (const relativePath of officialPages) {
     `${relativePath} não pode usar o número informado por engano`
   );
 }
+
+const home = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+assert.ok(
+  home.includes(officialVisiblePhone),
+  `A Home deve exibir o telefone oficial como ${officialVisiblePhone}`
+);
+assert.match(
+  home,
+  /"telephone": "\+55-91-98448-7207"/,
+  'O JSON-LD da Home deve publicar o telefone oficial'
+);
+for (const oldPattern of supersededHomePhonePatterns) {
+  assert.ok(
+    !home.includes(oldPattern),
+    `A Home nao pode conter a variacao antiga ${oldPattern}`
+  );
+}
+assert.match(
+  home,
+  /href="https:\/\/wa\.me\/5591984487207\?text=[^"]+"/,
+  'O botao da Home deve continuar apontando para 5591984487207'
+);
 
 const attendant = fs.readFileSync(path.join(root, 'atendimento.js'), 'utf8');
 assert.match(
