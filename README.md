@@ -114,7 +114,7 @@ Mude pra qualquer cor. O site inteiro se adapta.
 
 ### Mudar número do WhatsApp
 
-Procure no `index.html` por `5591987137397` e troque pelo seu número no formato:
+Procure no `index.html` por `5591984487207` e troque pelo seu número no formato:
 - `55` (Brasil) + DDD (91) + número (987137397)
 - Exemplo: `55` + `11` + `999999999` = `5511999999999`
 

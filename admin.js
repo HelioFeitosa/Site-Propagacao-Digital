@@ -2,7 +2,7 @@
   'use strict';
 
   const TOKEN_KEY = 'pd-admin-token-v1';
-  const WHATSAPP_NUMBER = '5591987137397';
+  const WHATSAPP_NUMBER = '5591984487207';
 
   const login = document.querySelector('#adminLogin');
   const content = document.querySelector('#adminContent');

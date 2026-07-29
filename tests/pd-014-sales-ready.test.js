@@ -55,19 +55,19 @@ for (const unsupportedClaim of [
 const genericWhatsAppText = 'Ol%C3%A1%21%20Conheci%20a%20Propaga%C3%A7%C3%A3o%20Digital%20e%20gostaria%20de%20conversar%20sobre%20um%20projeto%20para%20o%20meu%20neg%C3%B3cio.';
 assert.match(
   home,
-  new RegExp(`href="https://wa\\.me/5591987137397\\?text=${genericWhatsAppText}"[^>]*>Conversar sobre meu negócio</a>`)
+  new RegExp(`href="https://wa\\.me/5591984487207\\?text=${genericWhatsAppText}"[^>]*>Conversar sobre meu negócio</a>`)
 );
 
 for (const project of ['Lume%20Modas', 'Destak%20Colch%C3%B5es', 'Big%20Blog%20Brasil']) {
   assert.match(
     home,
-    new RegExp(`href="https://wa\\.me/5591987137397\\?text=Ol%C3%A1%21%20Vi%20o%20projeto%20${project}%20e%20gostaria%20de%20algo%20parecido%20para%20o%20meu%20neg%C3%B3cio\\."`)
+    new RegExp(`href="https://wa\\.me/5591984487207\\?text=Ol%C3%A1%21%20Vi%20o%20projeto%20${project}%20e%20gostaria%20de%20algo%20parecido%20para%20o%20meu%20neg%C3%B3cio\\."`)
   );
 }
 
 const whatsappNumbers = [...home.matchAll(/https:\/\/wa\.me\/(\d+)/g)].map((match) => match[1]);
 assert.ok(whatsappNumbers.length > 0, 'A Home deve conter CTAs de WhatsApp');
-assert.deepEqual([...new Set(whatsappNumbers)], ['5591987137397'], 'Todos os CTAs devem usar o número comercial aprovado');
+assert.deepEqual([...new Set(whatsappNumbers)], ['5591984487207'], 'Todos os CTAs devem usar o número comercial aprovado');
 
 assert.match(
   home,

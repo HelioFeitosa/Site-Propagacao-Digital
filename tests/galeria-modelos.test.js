@@ -32,7 +32,7 @@ for (const asset of [
   assert.ok(fs.existsSync(path.join(root, 'img', 'modelos-lojas', asset)), `Imagem ausente: ${asset}`);
 }
 
-assert.match(gallery, /wa\.me\/5591987137397/);
+assert.match(gallery, /wa\.me\/5591984487207/);
 assert.match(gallery, /não é um modelo fechado|personalizado/i);
 assert.match(index, /href="\/galeria-modelos"/);
 assert.match(stores, /href="\/galeria-modelos"/);

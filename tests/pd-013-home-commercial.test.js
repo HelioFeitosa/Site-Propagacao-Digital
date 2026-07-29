@@ -22,7 +22,7 @@ for (const copy of requiredHeroCopy) {
 }
 
 assert.match(home, /href="#projetos-funcionando"[^>]*>\s*Ver projetos funcionando/s);
-assert.match(home, /href="https:\/\/wa\.me\/5591987137397\?text=[^"]+"[^>]*>\s*Conversar sobre meu negócio/s);
+assert.match(home, /href="https:\/\/wa\.me\/5591984487207\?text=[^"]+"[^>]*>\s*Conversar sobre meu negócio/s);
 
 const projectsStart = home.indexOf('id="projetos-funcionando"');
 const aboutStart = home.indexOf('id="sobre"');

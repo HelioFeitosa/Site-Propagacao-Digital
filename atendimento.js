@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const WHATSAPP_NUMBER = '5591987137397';
+  const WHATSAPP_NUMBER = '5591984487207';
   const STORAGE_KEY = 'pd-assistente-helio-v2';
   const VISITOR_KEY = 'pd-assistente-visitor-v1';
   const API_ENDPOINT = '/api/atendimento';
