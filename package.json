@@ -5,7 +5,7 @@
   "scripts": {
     "start": "npx serve .",
     "build": "node -e \"console.log('Static site: no build step required')\"",
-    "test": "node tests/atendimento-context.test.js && node tests/client-memory.test.js && node tests/pd-013-home-commercial.test.js && node tests/pd-014-sales-ready.test.js && node tests/pd-015-attendant-visuals.test.js && node tests/pd-016-commercial-humanization.test.js && node tests/pd-016-api-integration.test.js && node tests/pd-018-official-phone.test.js",
+    "test": "node tests/atendimento-context.test.js && node tests/client-memory.test.js && node tests/pd-013-home-commercial.test.js && node tests/pd-014-sales-ready.test.js && node tests/pd-015-attendant-visuals.test.js && node tests/pd-016-commercial-humanization.test.js && node tests/pd-016-api-integration.test.js && node tests/pd-018-official-phone.test.js && node tests/pd-019a-hybrid-routing.test.js",
     "test:pd015:browser": "node tests/pd-015-browser-regression.test.js",
     "test:pd016:browser": "node tests/pd-016-browser-regression.test.js"
   },

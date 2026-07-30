@@ -16,6 +16,12 @@ const {
 const {
   advanceCommercialConversation
 } = require('../lib/commercial-conversation');
+const {
+  isHybridOpenAIEnabled,
+  requestHybridReply
+} = require('../lib/hybrid-openai');
+
+const HYBRID_OPENAI_ENABLED = isHybridOpenAIEnabled(process.env.HELIO_OPENAI_ENABLED);
 
 const rateLimit = new Map();
 
@@ -1197,6 +1203,26 @@ module.exports = async function handler(req, res) {
       Object.assign(lead, commercialResult.state);
       reply = commercialResult.reply;
       provider = 'commercial-state';
+
+      if (HYBRID_OPENAI_ENABLED && OPENAI_API_KEY && commercialResult.aiAssistance?.eligible) {
+        const hybridResult = await requestHybridReply({
+          apiKey: OPENAI_API_KEY,
+          model: MODEL,
+          messages,
+          currentMessage: lastUserText,
+          state: commercialResult.state,
+          purpose: commercialResult.aiAssistance.purpose
+        });
+
+        if (hybridResult.ok) {
+          reply = hybridResult.text;
+          provider = 'openai';
+        } else {
+          provider = 'openai-fallback';
+          const requestId = hybridResult.requestId ? ` requestId=${hybridResult.requestId}` : '';
+          console.error(`[pd-atendimento-hybrid] type=${hybridResult.errorType}${requestId}`);
+        }
+      }
     } else if (OPENAI_API_KEY) {
       try {
         reply = await callOpenAI(messages, lead, cleanText(body.page, 160), cleanText(body.path, 120));
@@ -1216,6 +1242,7 @@ module.exports = async function handler(req, res) {
 
     if (!reply) {
       reply = priorityReply(lead, messages[messages.length - 1]?.content || '', messages);
+      provider = 'local-fallback';
     }
 
     if (!reply && GEMINI_API_KEY && ALLOW_GEMINI_FALLBACK) {
