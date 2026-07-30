@@ -1,7 +1,23 @@
 # PD-019A — Roteamento híbrido do atendente
 
 Data da decisão: 2026-07-29
-Estado: implementação local, desligada por padrão e ainda não autorizada para Preview ou produção.
+Estado: validada em Preview e autorizada por Hélio Feitosa para publicação em produção na PD-019.
+
+## Atualização PD-019 — 2026-07-30
+
+O diagnóstico definitivo encontrou configuração dividida: `OPENAI_API_KEY` existia somente em Production e `HELIO_OPENAI_ENABLED` somente em Preview. Além disso, o valor da flag não era a string exata `true`. Os targets foram unificados para Preview e Production e a flag foi normalizada sem expor ou substituir a chave.
+
+Um diagnóstico temporário protegido retornou somente booleanos e comprovou chave, modelo e flag disponíveis no Preview, com a flag exatamente igual a `true`. O instrumento foi removido antes do merge.
+
+A validação real no Preview comprovou:
+
+- mensagens elegíveis com `provider: openai`;
+- mensagens determinísticas com `provider: commercial-state`;
+- estado comercial preservado;
+- fallback local com `provider: openai-fallback` em timeout ou resposta rejeitada;
+- nenhum segredo no frontend, HTML, Git, logs ou respostas.
+
+Saudações, identificação do visitante, solicitação de responsável e criação de promoção foram explicitamente incluídas entre os tópicos protegidos pela autoridade local.
 
 ## Decisão
 
