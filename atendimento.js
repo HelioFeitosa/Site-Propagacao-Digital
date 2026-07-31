@@ -81,7 +81,7 @@
   let lastVisualOpenAt = 0;
 
   const initialLead = {
-    commercialVersion: 1,
+    commercialVersion: 2,
     customerName: '',
     nameDeclined: false,
     businessType: null,
@@ -126,7 +126,7 @@
         firstMessage?.role === 'assistant' &&
         LEGACY_GREETING_TEXTS.has(firstMessage.content)
       );
-      const stateMigrated = saved.lead?.commercialVersion !== 1;
+      const stateMigrated = saved.lead?.commercialVersion !== 2;
       if (legacyGreetingMigrated) {
         messages[0] = { ...firstMessage, content: greetingText() };
       }
@@ -555,7 +555,7 @@
   }
 
   function resolveServiceAction() {
-    if (lead.commercialVersion === 1 && !lead.diagnosisConfirmed) return null;
+    if (lead.commercialVersion === 2 && !lead.businessType && !lead.productsOrServices) return null;
     const context = normalizeMatch([
       lead.business,
       lead.goal,
@@ -610,7 +610,11 @@
       const [resultStatus] = await Promise.allSettled([resultPromise, wait(RESPONSE_DELAY_MS)]);
       if (resultStatus.status === 'rejected') throw resultStatus.reason;
       const result = resultStatus.value;
-      if (result.lead) {
+      if (result.reset) {
+        lead = { ...initialLead, ...(result.lead || {}) };
+        chatMessages = [];
+        chatList.innerHTML = '';
+      } else if (result.lead) {
         lead = { ...lead, ...result.lead };
         if (lead.customerName) lead.name = lead.customerName;
       }
@@ -700,8 +704,6 @@
   }
 
   function fallbackReply(text) {
-    updateLeadLocally(text);
-
     if (/não.*nome|nome.*correto|meu nome é/i.test(text) && lead.name) {
       return `Perfeito, ${lead.name}. Corrigi aqui.\nAgora me conte: qual é o seu negócio e o que você quer melhorar primeiro?`;
     }

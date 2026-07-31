@@ -20,6 +20,9 @@ const {
   isHybridOpenAIEnabled,
   requestHybridReply
 } = require('../lib/hybrid-openai');
+const { createConversationState, resolveLocalTurn } = require('../lib/commercial-guardrails');
+const { applyMemoryUpdates } = require('../lib/conversation-memory');
+const { requestConversationTurn } = require('../lib/openai-conversation');
 
 const HYBRID_OPENAI_ENABLED = isHybridOpenAIEnabled(process.env.HELIO_OPENAI_ENABLED);
 
@@ -1148,14 +1151,15 @@ module.exports = async function handler(req, res) {
 
       return sendJson(res, 200, {
         reply: 'Pronto.\n\nApaguei a memória comercial associada a este navegador.\n\nSe você voltar depois, começaremos um novo atendimento.',
-        lead: {},
+        lead: createConversationState(),
         provider: 'memory',
+        reset: true,
         memory: { forgotten: true }
       });
     }
 
     const clientLead = { ...(body.lead || {}) };
-    const isCommercialV1 = body.legacyMode !== true;
+    const isOpenAIFirst = body.legacyMode !== true && clientLead.commercialVersion !== 1;
     delete clientLead.returningClient;
     delete clientLead.previousSummary;
     delete clientLead.memoryLastContact;
@@ -1163,7 +1167,7 @@ module.exports = async function handler(req, res) {
     let storedMemory = null;
     let recalledMemory = null;
 
-    if (!isCommercialV1) {
+    if (!isOpenAIFirst) {
       try {
         storedMemory = await loadVisitorMemory(visitorId);
         const recallIdentity = extractRecallIdentity(lastUserText);
@@ -1175,10 +1179,12 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const activeMemory = isCommercialV1 ? null : (recalledMemory || storedMemory);
-    const lead = isCommercialV1
-      ? { ...clientLead, commercialVersion: 1 }
-      : updateLead({
+    const activeMemory = isOpenAIFirst ? null : (recalledMemory || storedMemory);
+    const lead = isOpenAIFirst
+      ? createConversationState(clientLead)
+      : clientLead.commercialVersion === 1
+        ? { ...clientLead, commercialVersion: 1 }
+        : updateLead({
         ...(activeMemory?.lead || {}),
         ...clientLead
       }, messages);
@@ -1198,30 +1204,49 @@ module.exports = async function handler(req, res) {
     let reply = '';
     let provider = OPENAI_API_KEY ? 'fallback' : 'missing-openai-key';
 
-    if (isCommercialV1) {
+    let action = null;
+    let reset = false;
+    if (isOpenAIFirst) {
+      const localResult = resolveLocalTurn(lastUserText, lead);
+      if (localResult.handled) {
+        reply = localResult.reply;
+        provider = 'commercial-state';
+        action = localResult.action || null;
+        reset = localResult.reset === true;
+        Object.assign(lead, reset ? localResult.state : (localResult.statePatch || {}));
+      } else if (HYBRID_OPENAI_ENABLED && OPENAI_API_KEY) {
+        const conversationResult = await requestConversationTurn({ apiKey: OPENAI_API_KEY, model: MODEL, messages, currentMessage: lastUserText, state: lead });
+        if (conversationResult.ok) {
+          Object.assign(lead, applyMemoryUpdates(lead, conversationResult.output.memoryUpdates, lastUserText).state);
+          reply = conversationResult.output.reply;
+          provider = 'openai';
+          if (conversationResult.output.handoffRequested || conversationResult.output.recommendedAction === 'whatsapp') {
+            action = { type: 'whatsapp', value: '5591984487207' };
+            Object.assign(lead, { whatsappInterest: true, humanHandoffRequested: conversationResult.output.handoffRequested });
+          } else if (conversationResult.output.recommendedAction === 'gallery') {
+            action = { type: 'gallery', value: '/galeria-modelos' };
+            lead.galleryInterest = true;
+          }
+          if (conversationResult.output.requestedAssetId) Object.assign(lead, { visualRequested: true, visualStatus: 'CONFIRMED', visualAssetId: conversationResult.output.requestedAssetId });
+        } else {
+          provider = 'openai-fallback';
+          reply = 'Tive uma dificuldade para interpretar sua última mensagem. Posso continuar ajudando; reformule em uma frase curta, por favor.';
+          const requestId = conversationResult.requestId ? ` requestId=${conversationResult.requestId}` : '';
+          console.error(`[pd-atendimento-openai-first] type=${conversationResult.errorType}${requestId}`);
+        }
+      } else {
+        provider = 'openai-fallback';
+        reply = 'O atendimento inteligente está temporariamente indisponível. Posso continuar com informações oficiais ou abrir nosso WhatsApp.';
+      }
+    } else if (clientLead.commercialVersion === 1) {
       const commercialResult = advanceCommercialConversation(clientLead, lastUserText);
       Object.assign(lead, commercialResult.state);
       reply = commercialResult.reply;
       provider = 'commercial-state';
-
       if (HYBRID_OPENAI_ENABLED && OPENAI_API_KEY && commercialResult.aiAssistance?.eligible) {
-        const hybridResult = await requestHybridReply({
-          apiKey: OPENAI_API_KEY,
-          model: MODEL,
-          messages,
-          currentMessage: lastUserText,
-          state: commercialResult.state,
-          purpose: commercialResult.aiAssistance.purpose
-        });
-
-        if (hybridResult.ok) {
-          reply = hybridResult.text;
-          provider = 'openai';
-        } else {
-          provider = 'openai-fallback';
-          const requestId = hybridResult.requestId ? ` requestId=${hybridResult.requestId}` : '';
-          console.error(`[pd-atendimento-hybrid] type=${hybridResult.errorType}${requestId}`);
-        }
+        const hybridResult = await requestHybridReply({ apiKey: OPENAI_API_KEY, model: MODEL, messages, currentMessage: lastUserText, state: commercialResult.state, purpose: commercialResult.aiAssistance.purpose });
+        if (hybridResult.ok) { reply = hybridResult.text; provider = 'openai'; }
+        else { provider = 'openai-fallback'; console.error(`[pd-atendimento-hybrid] type=${hybridResult.errorType}`); }
       }
     } else if (OPENAI_API_KEY) {
       try {
@@ -1257,7 +1282,7 @@ module.exports = async function handler(req, res) {
     const finalReply = formatForChatReadability(reply || fallbackReply(lead, lastUserText, messages));
     let memorySaved = false;
 
-    if (!isCommercialV1) {
+    if (!isOpenAIFirst) {
       try {
         memorySaved = await saveClientMemory(visitorId, lead, [
           ...messages,
@@ -1272,6 +1297,8 @@ module.exports = async function handler(req, res) {
       reply: finalReply,
       lead,
       provider,
+      action,
+      reset,
       memory: {
         recognized: Boolean(recalledMemory),
         saved: memorySaved
