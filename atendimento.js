@@ -97,6 +97,12 @@
     galleryInterest: false,
     whatsappInterest: false,
     humanHandoffRequested: false,
+    visitorPhone: '',
+    memoryFacts: {},
+    visualRequests: [],
+    galleryRejectedForSegment: false,
+    galleryRejectionReason: '',
+    handoffUrl: '',
     name: '',
     business: '',
     goal: '',
@@ -146,7 +152,7 @@
   function saveConversation() {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
       lead,
-      messages: chatMessages.slice(-24)
+      messages: chatMessages.slice(-40)
     }));
   }
 
@@ -429,7 +435,7 @@
     }
 
     const serviceAction = resolveServiceAction();
-    const needsGallery = lead.galleryInterest || lead.visualStatus === 'UNAVAILABLE' || lead.visualStatus === 'FAILED';
+    const needsGallery = !lead.galleryRejectedForSegment && (lead.galleryInterest || lead.visualStatus === 'UNAVAILABLE' || lead.visualStatus === 'FAILED');
     if (needsGallery && serviceAction?.label !== 'Conhecer a galeria') {
       addAction('Conhecer a galeria', () => {
         window.location.href = '/galeria-modelos';
@@ -567,6 +573,7 @@
       return { label: 'Abrir demonstração de moda', path: '/modelos/loja-moda/' };
     }
     if (/(acai|comida|cardapio|pizza|pizzaria|lanche|delivery|marmita|restaurante)/.test(context)) {
+      if (lead.galleryRejectedForSegment) return null;
       return { label: 'Conhecer a galeria', path: '/galeria-modelos' };
     }
     if (lead.service === 'lojas') {
@@ -617,7 +624,10 @@
       } else if (result.lead) {
         lead = { ...lead, ...result.lead };
         if (lead.customerName) lead.name = lead.customerName;
+        if (lead.businessType) lead.business = lead.businessType;
+        if (lead.goals) lead.goal = lead.goals;
       }
+      if (result.action?.type === 'whatsapp' && result.action.url) lead.handoffUrl = result.action.url;
       const reply = result.reply || fallbackReply(content);
       chatMessages.push({ role: 'assistant', content: reply });
       if (typing) typing.remove();
@@ -651,7 +661,7 @@
       body: JSON.stringify({
         visitorId,
         lead,
-        messages: chatMessages.slice(-18),
+        messages: chatMessages.slice(-24),
         page: document.title,
         path: window.location.pathname
       })
@@ -732,6 +742,7 @@
   }
 
   function buildWhatsappUrl() {
+    if (lead.handoffUrl) return lead.handoffUrl;
     const service = lead.service && services[lead.service] ? services[lead.service].name : 'A definir';
     const transcript = chatMessages
       .filter((message) => message.role === 'user')
