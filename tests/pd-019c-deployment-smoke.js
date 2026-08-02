@@ -9,7 +9,14 @@ if (!deployment) throw new Error('Usage: node tests/pd-019c-deployment-smoke.js 
 const requestFile = join(tmpdir(), `pd019c-request-${process.pid}.json`);
 const responseFile = join(tmpdir(), `pd019c-response-${process.pid}.json`);
 
-function call(payload) {
+async function call(payload) {
+  if (/^https:\/\//.test(deployment)) {
+    const response = await fetch(`${deployment.replace(/\/$/, '')}/api/atendimento`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error(`deployment request failed: HTTP ${response.status}`);
+    return response.json();
+  }
   writeFileSync(requestFile, JSON.stringify(payload));
   const args = ['vercel', 'curl', '/api/atendimento', '--deployment', deployment, '--', '--silent', '--show-error', '--output', responseFile, '--request', 'POST', '--header', 'Content-Type: application/json', '--data-binary', `@${requestFile}`];
   const result = process.platform === 'win32'
@@ -19,7 +26,7 @@ function call(payload) {
   return JSON.parse(readFileSync(responseFile, 'utf8'));
 }
 
-try {
+(async () => { try {
   let lead = { commercialVersion: 2 };
   const messages = [{ role: 'assistant', content: 'Como você gostaria que eu te chamasse?' }];
   const turns = [
@@ -33,7 +40,7 @@ try {
   const providers = [];
   for (const content of turns) {
     messages.push({ role: 'user', content });
-    const response = call({ visitorId: 'pd019cdeployment', lead, messages: messages.slice(-24), page: 'Home', path: '/' });
+    const response = await call({ visitorId: 'pd019cdeployment', lead, messages: messages.slice(-24), page: 'Home', path: '/' });
     lead = response.lead;
     providers.push(response.provider);
     messages.push({ role: 'assistant', content: response.reply });
@@ -56,4 +63,4 @@ try {
 } finally {
   rmSync(requestFile, { force: true });
   rmSync(responseFile, { force: true });
-}
+} })().catch((error) => { console.error(error); process.exitCode = 1; });
