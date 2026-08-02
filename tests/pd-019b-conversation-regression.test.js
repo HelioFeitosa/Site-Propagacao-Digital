@@ -39,7 +39,7 @@ async function runScenario(name, turns) {
     { user: 'Pelo WhatsApp.', model: output('Entendi. Seu canal atual é o WhatsApp. O que você quer melhorar primeiro?', [update('salesChannels', 'WhatsApp', 'WhatsApp')]) },
     { user: 'Quero vender mais.', model: output('Certo. Vou considerar seu objetivo de vender mais e seguir desse ponto.', [update('goals', 'vender mais', 'Quero vender mais')]) }
   ]);
-  assert.equal(neto.customerName, 'Neto'); assert.equal(neto.productsOrServices, 'toner para impressoras'); assert.equal(neto.goals, 'vender mais');
+  assert.equal(neto.customerName, 'Neto'); assert.equal(neto.productsOrServices, 'toner para impressoras'); assert.equal(neto.goals, 'aumentar as vendas');
 
   const marcos = await runScenario('Marcos', [
     { user: 'Marcos, eu vendo pizza no meu ponto e atendo pedidos pelo zap.', model: output('Entendi, Marcos. Você vende no ponto físico e pelo WhatsApp. O que quer melhorar agora?', [update('customerName', 'Marcos', 'Marcos'), update('businessType', 'pizzaria', 'vendo pizza'), update('productsOrServices', 'pizza', 'pizza'), update('salesChannels', 'ponto físico e WhatsApp', 'no meu ponto e atendo pedidos pelo zap')]) },
@@ -47,7 +47,7 @@ async function runScenario(name, turns) {
     { user: 'mais ou menos, vamos dizer que sim', model: output('Entendi a incerteza. Posso esclarecer a pergunta de outro jeito?'), assert: (r) => assert.equal(r.lead.businessType, 'pizzaria') },
     { user: 'você é uma piada', model: output('Percebi que minha resposta não ajudou. Vou ser mais direto.'), assert: (r) => assert.equal(r.lead.businessType, 'pizzaria') }
   ]);
-  assert.equal(marcos.customerName, 'Marcos'); assert.equal(marcos.salesChannels, 'ponto físico e WhatsApp'); assert.equal(marcos.goals, 'vender mais');
+  assert.equal(marcos.customerName, 'Marcos'); assert.equal(marcos.salesChannels, 'ponto físico e WhatsApp'); assert.equal(marcos.goals, 'aumentar as vendas');
 
   const reset = await call(neto, [{ role: 'user', content: 'reiniciar conversa' }]);
   assert.equal(reset.reset, true); assert.equal(reset.lead.customerName, ''); assert.equal(reset.lead.businessType, '');

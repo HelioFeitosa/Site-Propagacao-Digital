@@ -6,7 +6,7 @@ async function run() {
   assert.equal(request.store, false);
   assert.equal(request.text.format.type, 'json_schema');
   assert.equal(request.text.format.strict, true);
-  assert.match(request.instructions, /PropagaÃ§Ã£o Digital/);
+  assert.match(request.instructions, /Propagação Digital/);
 
   const output = {
     reply: 'Prazer, Neto. Hoje seus clientes chegam mais pelo WhatsApp ou por outro canal?',

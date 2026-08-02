@@ -21,8 +21,9 @@ const {
   requestHybridReply
 } = require('../lib/hybrid-openai');
 const { createConversationState, resolveLocalTurn } = require('../lib/commercial-guardrails');
-const { applyMemoryUpdates } = require('../lib/conversation-memory');
+const { applyMemoryUpdates, extractDeterministicMemoryUpdates } = require('../lib/conversation-memory');
 const { requestConversationTurn } = require('../lib/openai-conversation');
+const { buildCommercialHandoff } = require('../lib/commercial-handoff');
 
 const HYBRID_OPENAI_ENABLED = isHybridOpenAIEnabled(process.env.HELIO_OPENAI_ENABLED);
 
@@ -1207,6 +1208,11 @@ module.exports = async function handler(req, res) {
     let action = null;
     let reset = false;
     if (isOpenAIFirst) {
+      const previousAssistant = [...messages].reverse().find((message, index, list) => (
+        message.role === 'assistant' && list.slice(0, index).some((item) => item.role === 'user')
+      ))?.content || messages.filter((message) => message.role === 'assistant').slice(-1)[0]?.content || '';
+      const deterministicUpdates = extractDeterministicMemoryUpdates(lastUserText, { previousAssistant, state: lead });
+      Object.assign(lead, applyMemoryUpdates(lead, deterministicUpdates, lastUserText, { turn: messages.length }).state);
       const localResult = resolveLocalTurn(lastUserText, lead);
       if (localResult.handled) {
         reply = localResult.reply;
@@ -1217,7 +1223,7 @@ module.exports = async function handler(req, res) {
       } else if (HYBRID_OPENAI_ENABLED && OPENAI_API_KEY) {
         const conversationResult = await requestConversationTurn({ apiKey: OPENAI_API_KEY, model: MODEL, messages, currentMessage: lastUserText, state: lead });
         if (conversationResult.ok) {
-          Object.assign(lead, applyMemoryUpdates(lead, conversationResult.output.memoryUpdates, lastUserText).state);
+          Object.assign(lead, applyMemoryUpdates(lead, conversationResult.output.memoryUpdates, lastUserText, { turn: messages.length }).state);
           reply = conversationResult.output.reply;
           provider = 'openai';
           if (conversationResult.output.handoffRequested || conversationResult.output.recommendedAction === 'whatsapp') {
@@ -1227,7 +1233,15 @@ module.exports = async function handler(req, res) {
             action = { type: 'gallery', value: '/galeria-modelos' };
             lead.galleryInterest = true;
           }
-          if (conversationResult.output.requestedAssetId) Object.assign(lead, { visualRequested: true, visualStatus: 'CONFIRMED', visualAssetId: conversationResult.output.requestedAssetId });
+          if (conversationResult.output.requestedAssetId) {
+            const visualContext = `${lead.businessType} ${lead.productsOrServices}`.toLowerCase();
+            const compatible = conversationResult.output.requestedAssetId === 'lume-modas-functional-demo' && /(moda|roupa|boutique)/.test(visualContext);
+            if (compatible) Object.assign(lead, { visualRequested: true, visualStatus: 'READY', visualAssetId: conversationResult.output.requestedAssetId });
+            else {
+              Object.assign(lead, { visualRequested: true, visualStatus: 'UNAVAILABLE', visualAssetId: null });
+              reply = 'Ainda não existe um modelo visual compatível com o seu segmento disponível neste atendimento. Posso registrar o pedido e encaminhá-lo ao responsável.';
+            }
+          }
         } else {
           provider = 'openai-fallback';
           reply = 'Tive uma dificuldade para interpretar sua última mensagem. Posso continuar ajudando; reformule em uma frase curta, por favor.';
@@ -1237,6 +1251,10 @@ module.exports = async function handler(req, res) {
       } else {
         provider = 'openai-fallback';
         reply = 'O atendimento inteligente está temporariamente indisponível. Posso continuar com informações oficiais ou abrir nosso WhatsApp.';
+      }
+      if (action?.type === 'whatsapp') {
+        const handoff = buildCommercialHandoff(lead);
+        action = { ...action, url: handoff.url, summary: handoff.message };
       }
     } else if (clientLead.commercialVersion === 1) {
       const commercialResult = advanceCommercialConversation(clientLead, lastUserText);
