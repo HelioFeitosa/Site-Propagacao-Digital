@@ -11,13 +11,11 @@ const responseFile = join(tmpdir(), `pd019c-response-${process.pid}.json`);
 
 function call(payload) {
   writeFileSync(requestFile, JSON.stringify(payload));
-  const result = spawnSync('npx.cmd', [
-    'vercel', 'curl', '/api/atendimento', '--deployment', deployment, '--',
-    '--silent', '--show-error', '--output', responseFile,
-    '--request', 'POST', '--header', 'Content-Type: application/json',
-    '--data-binary', `@${requestFile}`
-  ], { encoding: 'utf8', timeout: 120000 });
-  if (result.status !== 0) throw new Error(`vercel curl failed: ${result.stderr || result.stdout}`);
+  const args = ['vercel', 'curl', '/api/atendimento', '--deployment', deployment, '--', '--silent', '--show-error', '--output', responseFile, '--request', 'POST', '--header', 'Content-Type: application/json', '--data-binary', `@${requestFile}`];
+  const result = process.platform === 'win32'
+    ? spawnSync('powershell.exe', ['-NoProfile', '-Command', `& 'C:\\Program Files\\nodejs\\npx.cmd' ${args.map((arg) => `'${String(arg).replaceAll("'", "''")}'`).join(' ')}`], { encoding: 'utf8', timeout: 120000 })
+    : spawnSync('npx', args, { encoding: 'utf8', timeout: 120000 });
+  if (result.status !== 0) throw new Error(`vercel curl failed: ${result.error?.message || result.stderr || result.stdout || `status ${result.status}`}`);
   return JSON.parse(readFileSync(responseFile, 'utf8'));
 }
 
