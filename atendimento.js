@@ -95,6 +95,7 @@
     visualAssetId: null,
     userReportedVisualMissing: false,
     galleryInterest: false,
+    galleryCtaShown: false,
     whatsappInterest: false,
     humanHandoffRequested: false,
     visitorPhone: '',
@@ -109,6 +110,9 @@
     service: '',
     urgency: '',
     budget: '',
+    visitorBudget: '',
+    officialPrice: '',
+    quotedThirdPartyAmount: '',
     ready: false
   };
 
@@ -435,7 +439,7 @@
     }
 
     const serviceAction = resolveServiceAction();
-    const needsGallery = !lead.galleryRejectedForSegment && (lead.galleryInterest || lead.visualStatus === 'UNAVAILABLE' || lead.visualStatus === 'FAILED');
+    const needsGallery = !lead.galleryRejectedForSegment && lead.galleryInterest;
     if (needsGallery && serviceAction?.label !== 'Conhecer a galeria') {
       addAction('Conhecer a galeria', () => {
         window.location.href = '/galeria-modelos';

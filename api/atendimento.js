@@ -20,7 +20,7 @@ const {
   isHybridOpenAIEnabled,
   requestHybridReply
 } = require('../lib/hybrid-openai');
-const { createConversationState, resolveLocalTurn } = require('../lib/commercial-guardrails');
+const { createConversationState, isExplicitGalleryIntent, resolveLocalTurn } = require('../lib/commercial-guardrails');
 const { applyMemoryUpdates, extractDeterministicMemoryUpdates } = require('../lib/conversation-memory');
 const { requestConversationTurn } = require('../lib/openai-conversation');
 const { buildCommercialHandoff } = require('../lib/commercial-handoff');
@@ -1164,6 +1164,7 @@ module.exports = async function handler(req, res) {
     delete clientLead.returningClient;
     delete clientLead.previousSummary;
     delete clientLead.memoryLastContact;
+    delete clientLead.transientError;
 
     let storedMemory = null;
     let recalledMemory = null;
@@ -1208,6 +1209,8 @@ module.exports = async function handler(req, res) {
     let action = null;
     let reset = false;
     if (isOpenAIFirst) {
+      const explicitGalleryIntent = isExplicitGalleryIntent(lastUserText);
+      if (!explicitGalleryIntent) lead.galleryInterest = false;
       const previousAssistant = [...messages].reverse().find((message, index, list) => (
         message.role === 'assistant' && list.slice(0, index).some((item) => item.role === 'user')
       ))?.content || messages.filter((message) => message.role === 'assistant').slice(-1)[0]?.content || '';
@@ -1229,9 +1232,10 @@ module.exports = async function handler(req, res) {
           if (conversationResult.output.handoffRequested || conversationResult.output.recommendedAction === 'whatsapp') {
             action = { type: 'whatsapp', value: '5591984487207' };
             Object.assign(lead, { whatsappInterest: true, humanHandoffRequested: conversationResult.output.handoffRequested });
-          } else if (conversationResult.output.recommendedAction === 'gallery') {
+          } else if (conversationResult.output.recommendedAction === 'gallery' && explicitGalleryIntent && !lead.galleryCtaShown) {
             action = { type: 'gallery', value: '/galeria-modelos' };
             lead.galleryInterest = true;
+            lead.galleryCtaShown = true;
           }
           if (conversationResult.output.requestedAssetId) {
             const visualContext = `${lead.businessType} ${lead.productsOrServices}`.toLowerCase();
