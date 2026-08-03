@@ -1237,7 +1237,7 @@ module.exports = async function handler(req, res) {
             lead.galleryInterest = true;
             lead.galleryCtaShown = true;
           }
-          if (conversationResult.output.requestedAssetId) {
+          if (conversationResult.output.requestedAssetId && explicitGalleryIntent) {
             const visualContext = `${lead.businessType} ${lead.productsOrServices}`.toLowerCase();
             const compatible = conversationResult.output.requestedAssetId === 'lume-modas-functional-demo' && /(moda|roupa|boutique)/.test(visualContext);
             if (compatible) Object.assign(lead, { visualRequested: true, visualStatus: 'READY', visualAssetId: conversationResult.output.requestedAssetId });

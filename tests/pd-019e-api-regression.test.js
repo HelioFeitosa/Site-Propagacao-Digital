@@ -17,7 +17,7 @@ global.fetch = async () => {
     json: async () => ({ output_text: JSON.stringify({
       reply: 'Vou considerar o que você explicou e seguir de forma prática.',
       intent: 'consultation', confidence: 0.95, memoryUpdates: [],
-      questionAsked: null, recommendedAction: 'gallery', requestedAssetId: null,
+      questionAsked: null, recommendedAction: 'gallery', requestedAssetId: 'lume-modas-functional-demo',
       handoffRequested: false
     }) })
   };
@@ -56,6 +56,7 @@ function call(lead, messages) {
   assert.equal(lead.businessType, 'assistência técnica de refrigeradores e geladeiras');
   assert.equal(lead.goals, 'receber mais pedidos e aparecer mais na região');
   assert.equal(lead.visitorBudget, 'R$ 1.000');
+  assert.doesNotMatch(results[0].reply, /modelo visual|galeria/i);
   assert.equal(results[1].provider, 'openai-fallback');
   assert.equal(results[2].provider, 'commercial-state');
   assert.match(results[2].reply, /R\$ 1\.000/);
