@@ -100,6 +100,12 @@
     humanHandoffRequested: false,
     visitorPhone: '',
     memoryFacts: {},
+    canonicalMemory: {},
+    rejectedFacts: [],
+    customerTypes: '',
+    visualActionStatus: 'NOT_REQUESTED',
+    visualConsentPending: false,
+    generalVisualAccepted: false,
     visualRequests: [],
     galleryRejectedForSegment: false,
     galleryRejectionReason: '',
@@ -632,13 +638,21 @@
         if (lead.goals) lead.goal = lead.goals;
       }
       if (result.action?.type === 'whatsapp' && result.action.url) lead.handoffUrl = result.action.url;
+      if (result.action?.type === 'open_visual' && result.action.status === 'READY') {
+        const example = visuals.find((item) => item.assetId === result.action.assetId);
+        const card = example ? presentVisualOnce(example) : null;
+        if (!card) lead.visualActionStatus = 'FAILED';
+        else lead.visualActionStatus = 'RENDERED';
+      }
       const reply = result.reply || fallbackReply(content);
       chatMessages.push({ role: 'assistant', content: reply });
       if (typing) typing.remove();
       addMessageToDom(reply, 'bot');
-      const visualContext = getVisualContext(content, reply);
-      presentNoticeOnce(visualContext.notice);
-      if (visualContext.example) presentVisualOnce(visualContext.example);
+      if (result.action?.type !== 'open_visual') {
+        const visualContext = getVisualContext(content, reply);
+        presentNoticeOnce(visualContext.notice);
+        if (visualContext.example) presentVisualOnce(visualContext.example);
+      }
     } catch {
       const reply = fallbackReply(content);
       chatMessages.push({ role: 'assistant', content: reply });
